@@ -1,0 +1,8 @@
+node_modules/
+package-lock.json
+_capture/
+deps/
+*.deb
+.ldpath
+*.webm
+*.mp4

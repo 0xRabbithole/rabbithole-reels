@@ -1,0 +1,8 @@
+_renders/
+node_modules/
+_capture/
+deps/
+*.deb
+.ldpath
+*.webm
+.DS_Store

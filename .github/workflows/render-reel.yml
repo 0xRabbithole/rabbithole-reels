@@ -1,0 +1,71 @@
+name: Render Reel → MP4
+
+# Permanent unattended renderer. Runs on a cloud VM (no 45s limit, full system access),
+# turns a reel .html into a 1080x1920 MP4 — no screen recording, nobody touches anything.
+#
+# Trigger it two ways:
+#   • Manually: Actions tab → "Render Reel → MP4" → Run workflow (pick the html + length)
+#   • Automatically: every push that changes a reel .html renders it (see the `push:` block)
+
+on:
+  workflow_dispatch:
+    inputs:
+      html:
+        description: "Reel HTML (path from repo root)"
+        required: true
+        default: "MCP_Reel_01/mcp_reel_visual.html"
+      seconds:
+        description: "Record seconds (reel length + ~2)"
+        required: true
+        default: "90"
+      voice:
+        description: "Optional voiceover .mp3 (path from repo root) — blank = silent video"
+        required: false
+        default: ""
+      out:
+        description: "Output filename"
+        required: true
+        default: "reel.mp4"
+  push:
+    paths:
+      - "**/mcp_reel_visual.html"
+      - "**/*_reel_visual.html"
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install ffmpeg
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+
+      - name: Install Playwright + Chromium (with system deps)
+        working-directory: _REEL_ENGINE/capture
+        run: |
+          npm install playwright
+          npx playwright install --with-deps chromium
+
+      - name: Render reel
+        working-directory: _REEL_ENGINE/capture
+        run: |
+          HTML="${{ github.event.inputs.html || 'MCP_Reel_01/mcp_reel_visual.html' }}"
+          SECS="${{ github.event.inputs.seconds || '90' }}"
+          OUTNAME="${{ github.event.inputs.out || 'reel.mp4' }}"
+          VOICE_IN="${{ github.event.inputs.voice }}"
+          VOICE_ARG=""
+          if [ -n "$VOICE_IN" ]; then VOICE_ARG="$GITHUB_WORKSPACE/$VOICE_IN"; fi
+          bash render.sh "$GITHUB_WORKSPACE/$HTML" "$SECS" "$GITHUB_WORKSPACE/_renders/$OUTNAME" "$VOICE_ARG"
+
+      - name: Upload MP4
+        uses: actions/upload-artifact@v4
+        with:
+          name: rendered-reel
+          path: _renders/*.mp4
+          if-no-files-found: error
+          retention-days: 30

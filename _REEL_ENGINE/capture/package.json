@@ -1,0 +1,13 @@
+{
+  "name": "rabbithole-reel-capture",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Headless renderer: animated reel .html -> 1080x1920 MP4 (no screen recording).",
+  "scripts": {
+    "setup": "npm i playwright && npx playwright install chromium",
+    "render": "bash render.sh"
+  },
+  "dependencies": {
+    "playwright": "^1.61.0"
+  }
+}

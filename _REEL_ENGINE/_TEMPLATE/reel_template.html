@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MCP Reel — Rabbithole</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter+Tight:wght@500;600;700;800;900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+:root{
+  --blue:#1D3A8A;--blue-deep:#15296A;--blue2:#3B5BD0;--blue-tint:#EEF1F9;
+  --ink:#0A0A0A;--ink2:#33363D;--muted:#5A5F66;--hair:#E9EBEF;--bg:#FFFFFF;--ok:#1F8A4C;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;}
+html,body{height:100%;background:#0c0c0d;overflow:hidden;font-family:'Inter',system-ui,sans-serif;}
+#wrap{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;}
+#stage{position:relative;width:1080px;height:1920px;transform-origin:center center;overflow:hidden;background:var(--bg);}
+#grid{position:absolute;inset:0;pointer-events:none;background-image:radial-gradient(rgba(29,58,138,.05) 1.4px,transparent 1.4px);
+  background-size:46px 46px;mask-image:linear-gradient(180deg,transparent,#000 20%,#000 82%,transparent);}
+#wash{position:absolute;inset:0;pointer-events:none;background:
+  radial-gradient(60% 34% at 50% 12%, rgba(29,58,138,.08), transparent 70%),
+  radial-gradient(70% 32% at 50% 92%, rgba(29,58,138,.05), transparent 72%),
+  linear-gradient(180deg, #fff 0%, #F7F9FC 100%);}
+
+.sq{position:absolute;border-radius:20px;background:rgba(29,58,138,.03);border:1px solid rgba(29,58,138,.09);will-change:transform;}
+.s1{width:120px;height:120px;left:120px;top:430px}.s2{width:84px;height:84px;left:880px;top:360px}
+.s3{width:104px;height:104px;left:860px;top:1380px}.s4{width:72px;height:72px;left:160px;top:1500px}
+.s5{width:62px;height:62px;left:540px;top:1620px}.s6{width:54px;height:54px;left:300px;top:330px}
+
+/* floating tool chips (ambient) */
+.floatchips{position:absolute;inset:0;pointer-events:none;z-index:1;}
+.fc{position:absolute;font-family:'JetBrains Mono',monospace;font-size:26px;font-weight:600;color:var(--blue);
+  background:rgba(29,58,138,.05);border:1px solid rgba(29,58,138,.14);border-radius:10px;padding:6px 14px;opacity:.0;}
+
+.brandbar{position:absolute;top:84px;left:84px;display:flex;align-items:center;gap:16px;z-index:7;}
+.brandbar .ic{width:60px;height:60px;background-repeat:no-repeat;background-position:center;background-size:contain;}
+.brandbar .wm{display:flex;flex-direction:column;line-height:1;}
+.brandbar .wm b{font-family:'Inter Tight';font-weight:800;font-size:40px;letter-spacing:-.5px;color:var(--ink);}
+.brandbar .wm span{font-family:'Inter';font-weight:600;font-size:18px;letter-spacing:6px;color:var(--muted);margin-top:5px;}
+.icB{background-image:url('./favicon-512.png');border-radius:9px;}
+.icW{background-image:url('./favicon-512.png');border-radius:9px;}
+
+#prog{position:absolute;top:112px;right:84px;width:320px;height:10px;border-radius:7px;background:#E7E9EF;z-index:7;
+  box-shadow:inset 0 1px 3px rgba(16,28,70,.10);}
+#progfill{height:100%;width:0;border-radius:7px;position:relative;
+  background:linear-gradient(90deg,var(--blue2),var(--blue));box-shadow:0 0 22px rgba(29,58,138,.5);}
+#progtip{position:absolute;right:-5px;top:50%;transform:translateY(-50%);width:18px;height:18px;border-radius:50%;
+  background:#fff;border:4px solid var(--blue);box-shadow:0 0 18px rgba(29,58,138,.8),0 0 0 6px rgba(29,58,138,.12);}
+
+.scene{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:0;
+       padding:250px 90px 380px;text-align:center;z-index:3;}
+
+#safe{position:absolute;inset:0;z-index:20;pointer-events:none;display:none;}
+#safe.on{display:block;}
+#safe .z{position:absolute;background:rgba(225,75,60,.12);border:2px dashed rgba(225,75,60,.55);}
+#safe .ztop{left:0;right:0;top:0;height:240px;}
+#safe .zbot{left:0;right:0;bottom:0;height:430px;}
+#safe .zright{right:0;top:240px;height:830px;width:150px;}
+#safe .lbl{position:absolute;font-family:'JetBrains Mono',monospace;font-size:22px;font-weight:600;letter-spacing:2px;color:#B23B2C;}
+.scene.active{display:flex;}
+
+.pill{display:inline-flex;align-items:center;gap:15px;margin-bottom:36px;font-family:'JetBrains Mono',monospace;font-weight:500;
+  font-size:25px;letter-spacing:6px;color:var(--ink2);text-transform:uppercase;}
+.pill .dot{display:none;}
+.pill b{font-family:'Inter Tight';font-weight:800;font-size:27px;color:#fff;background:var(--blue);border-radius:7px;
+  padding:8px 14px 8px 13px;letter-spacing:0;line-height:1;box-shadow:0 8px 18px rgba(29,58,138,.22);}
+.pill .sep{color:var(--blue);font-weight:700;margin:0 -4px;}
+.dot{width:12px;height:12px;border-radius:50%;background:var(--blue);box-shadow:0 0 0 5px rgba(29,58,138,.12);}
+
+h1{font-family:'Inter Tight',sans-serif;font-weight:800;letter-spacing:-.045em;line-height:1.0;color:var(--ink);font-size:140px;}
+h1.s{font-size:118px;}h1.xs{font-size:100px;}
+.w{display:inline-block;}
+.hl{display:inline-block;color:#fff;background:var(--blue);border-radius:8px;padding:.02em .22em;box-shadow:0 12px 28px rgba(29,58,138,.28);}
+.bl{color:var(--blue);}
+.thru{color:var(--ink);position:relative;white-space:nowrap;}
+.thru i{position:absolute;left:-3%;right:-3%;top:52%;height:8px;background:var(--red);border-radius:4px;transform:scaleX(0);transform-origin:left;display:block;box-shadow:0 0 14px rgba(225,75,60,.4);}
+.sub{margin-top:50px;font-family:'Inter';font-size:50px;font-weight:550;color:var(--ink2);line-height:1.26;max-width:880px;}
+.sub b{color:var(--blue);font-weight:700;}
+.micro{margin-top:30px;font-family:'JetBrains Mono',monospace;font-size:25px;letter-spacing:2px;color:var(--muted);}
+.resultpill{margin-top:40px;display:inline-flex;align-items:center;gap:12px;font-family:'Inter Tight';font-weight:800;font-size:44px;
+  color:#fff;background:var(--blue);border-radius:16px;padding:22px 38px;box-shadow:0 22px 50px rgba(29,58,138,.30);}
+
+.card{background:#fff;border:1px solid var(--hair);border-radius:22px;box-shadow:0 30px 70px rgba(16,28,70,.10);padding:38px 44px;}
+.cardhead{display:flex;align-items:center;gap:12px;font-family:'JetBrains Mono',monospace;font-weight:500;font-size:23px;
+  letter-spacing:3px;color:var(--muted);margin-bottom:24px;text-transform:uppercase;}
+.cardhead .gd{width:12px;height:12px;border-radius:50%;background:var(--blue);}
+.cardhead .dots{display:flex;gap:8px;margin-left:auto;}
+.cardhead .dots i{width:13px;height:13px;border-radius:50%;background:#E2E5EA;}
+.code{font-family:'JetBrains Mono',monospace;font-size:37px;color:var(--ink);text-align:left;padding:10px 0;line-height:1.25;display:flex;align-items:baseline;gap:16px;}
+.code .k{color:var(--ok);font-weight:700;}.code .n{color:var(--blue);font-weight:700;}
+
+/* terminal */
+.term{width:740px;text-align:left;}
+.tline{font-family:'JetBrains Mono',monospace;font-size:36px;color:var(--ink);line-height:1.5;white-space:nowrap;}
+.twrap{display:inline-block;overflow:hidden;white-space:nowrap;vertical-align:bottom;}
+.tline .p{color:var(--ok);font-weight:700;}.tline .cmd{color:var(--blue);font-weight:600;}.tline .arg{color:var(--ink2);}
+.tcur{display:inline-block;width:16px;height:38px;background:var(--blue);vertical-align:-6px;margin-left:3px;}
+.tout{margin-top:18px;font-family:'JetBrains Mono',monospace;font-size:33px;line-height:1.55;color:var(--ink2);}
+.tout div{display:flex;gap:14px;}.tout .ok{color:var(--ok);font-weight:700;}
+
+.chip{display:inline-flex;align-items:center;gap:14px;font-family:'Inter Tight';font-weight:700;font-size:42px;color:var(--ink);
+  background:#fff;border:1px solid var(--hair);border-radius:16px;padding:22px 34px;box-shadow:0 18px 40px rgba(16,28,70,.08);}
+.chip small{font-family:'JetBrains Mono',monospace;font-weight:500;font-size:22px;color:var(--muted);letter-spacing:1px;}
+.chip.on{border-color:var(--blue);color:var(--blue);background:var(--blue-tint);}
+.chip.off{opacity:.4;}
+.chip .i{width:38px;height:38px;display:flex;align-items:center;justify-content:center;color:var(--blue)}
+
+.flow{position:relative;width:830px;margin-top:22px;display:flex;flex-direction:column;align-items:center;gap:20px;}
+.node{width:100%;border:1px solid var(--hair);border-radius:22px;padding:28px 34px;text-align:left;background:#fff;
+  box-shadow:0 22px 50px rgba(16,28,70,.09);display:flex;align-items:center;gap:22px;}
+.node .ic{width:68px;height:68px;border-radius:16px;flex:0 0 auto;display:flex;align-items:center;justify-content:center;background:#F4F6FB;border:1px solid var(--hair);color:var(--blue);}
+.node .nt{font-family:'Inter Tight';font-weight:800;font-size:45px;color:var(--ink);letter-spacing:-1px;}
+.node .nd{font-family:'JetBrains Mono',monospace;font-size:22px;color:var(--muted);margin-top:5px;}
+.node.hot{border-color:var(--blue);box-shadow:0 26px 56px rgba(29,58,138,.18);}
+.node.hot .ic{background:var(--blue);color:#fff;}
+.conlabel{font-family:'JetBrains Mono',monospace;font-size:24px;letter-spacing:3px;color:var(--muted);font-weight:600;display:flex;align-items:center;gap:10px;}
+.conlabel b{color:var(--blue);}.conlabel .av{color:var(--blue);font-size:28px;}
+.toolrow{display:flex;gap:12px;margin-top:13px;}
+.tool{font-family:'JetBrains Mono',monospace;font-size:26px;font-weight:600;color:var(--blue);background:var(--blue-tint);border:1px solid #D5DCF0;border-radius:10px;padding:6px 15px;}
+
+.vs{display:flex;gap:84px;margin-top:12px;position:relative;}
+.vsbadge{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:92px;height:92px;border-radius:50%;background:var(--ink);
+  color:#fff;font-family:'Inter Tight';font-weight:800;font-size:34px;display:flex;align-items:center;justify-content:center;z-index:4;
+  box-shadow:0 18px 40px rgba(0,0,0,.25);border:6px solid #fff;}
+.col{width:402px;border-radius:24px;padding:42px 32px;text-align:left;border:1px solid var(--hair);}
+.col.api{background:#FAFAFB;}.col.mcp{background:var(--blue-tint);border-color:#C9D3EE;}
+.col h3{font-family:'Inter Tight';font-size:56px;font-weight:800;margin-bottom:24px;letter-spacing:-1.5px;}
+.col.api h3{color:var(--muted);}.col.mcp h3{color:var(--blue);}
+.col .r{font-family:'Inter';font-size:31px;font-weight:550;color:var(--ink2);line-height:1.16;margin:18px 0;display:flex;gap:13px;align-items:flex-start;}
+.col .r .m{font-weight:800;flex:0 0 auto;font-family:'JetBrains Mono'}
+.col.api .r .m{color:var(--muted);}.col.mcp .r .m{color:var(--ok);}
+.col .r .mk{font-weight:800;color:var(--ink);}
+
+/* plugs (adapter) */
+.plugwrap{display:flex;align-items:center;gap:30px;margin-top:30px;}
+.plugs{display:flex;gap:14px;}
+.plug{width:84px;height:84px;border-radius:18px;border:1px solid var(--hair);background:#fff;display:flex;align-items:center;justify-content:center;color:var(--muted);box-shadow:0 14px 30px rgba(16,28,70,.07);}
+.adapter{width:110px;height:110px;border-radius:24px;background:var(--blue);display:flex;align-items:center;justify-content:center;color:#fff;box-shadow:0 24px 50px rgba(29,58,138,.3);}
+.plugarrow{font-family:'JetBrains Mono';font-size:42px;color:var(--blue);font-weight:700;}
+
+/* hub */
+.hub{position:relative;width:840px;height:600px;margin-top:0;}
+.hub svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible;}
+.dpath{fill:none;stroke:var(--blue);stroke-width:3.5;stroke-linecap:round;opacity:.45;}
+.flowdot{fill:var(--blue2);}
+.core{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:176px;height:176px;border-radius:28px;background:var(--blue);
+  border:1px solid var(--blue);box-shadow:0 30px 60px rgba(29,58,138,.30);display:flex;align-items:center;justify-content:center;
+  font-family:'Inter Tight';font-weight:800;font-size:58px;color:#fff;z-index:2;letter-spacing:-1px;}
+.conn{position:absolute;display:flex;align-items:center;gap:12px;font-family:'Inter Tight';font-weight:700;font-size:34px;color:var(--ink);
+  background:#fff;border:1px solid var(--hair);border-radius:16px;padding:16px 24px;box-shadow:0 20px 42px rgba(16,28,70,.10);z-index:2;}
+.conn .d{width:30px;height:30px;border-radius:7px;object-fit:contain;flex:0 0 auto;}
+.hubstat{margin-top:14px;font-family:'JetBrains Mono';font-size:27px;letter-spacing:2px;color:var(--muted);}
+.hubstat b{color:var(--blue);font-weight:700;font-size:32px;}
+
+.mathwrap{display:flex;align-items:center;gap:22px;margin-top:30px;}
+.mathcard{width:356px;border:1px solid var(--hair);border-radius:24px;background:#fff;padding:38px 26px;box-shadow:0 28px 60px rgba(16,28,70,.10);text-align:center;}
+.mathcard.hot{background:var(--blue);border-color:var(--blue);box-shadow:0 28px 60px rgba(29,58,138,.30);}
+.mathcard .mh{font-family:'JetBrains Mono';font-size:21px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;}
+.mathcard.hot .mh{color:rgba(255,255,255,.72);}
+.bignum{font-family:'Inter Tight';font-weight:900;font-size:138px;line-height:1;color:var(--ink);letter-spacing:-5px;margin:8px 0 10px;}
+.mathcard.hot .bignum{color:#fff;}
+.mathlbl{font-family:'JetBrains Mono';font-size:20px;color:var(--muted);line-height:1.35;}
+.mathcard.hot .mathlbl{color:rgba(255,255,255,.85);}
+.matharrow{font-family:'Inter Tight';font-weight:800;font-size:46px;color:var(--blue);}
+
+/* node graph */
+.graph{position:relative;width:760px;height:430px;margin-top:18px;}
+.graph svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible;}
+.gline{stroke:var(--blue);stroke-width:2.5;opacity:.3;}
+.gnode{fill:#fff;stroke:var(--blue);stroke-width:3;}
+.gnode.big{fill:var(--blue);}
+
+/* two cards (local/open) */
+.duo{display:flex;gap:24px;margin-top:48px;}
+.bigcard{width:330px;border-radius:24px;border:1px solid var(--hair);background:#fff;padding:40px 30px;box-shadow:0 24px 54px rgba(16,28,70,.10);text-align:center;}
+.bigcard .ic{width:84px;height:84px;border-radius:20px;background:var(--blue-tint);display:flex;align-items:center;justify-content:center;margin:0 auto 22px;color:var(--blue);}
+.bigcard .t{font-family:'Inter Tight';font-weight:800;font-size:46px;color:var(--blue);letter-spacing:-1px;}
+.bigcard .s{font-family:'JetBrains Mono';font-size:24px;color:var(--muted);margin-top:8px;}
+
+/* mini visualizations */
+.hookviz{display:flex;align-items:center;margin-top:70px;}
+.hvn{width:142px;height:142px;border-radius:30px;display:flex;align-items:center;justify-content:center;font-family:'Inter Tight';font-weight:800;font-size:52px;}
+.hvn.ai{background:var(--blue);color:#fff;box-shadow:0 26px 54px rgba(29,58,138,.30);}
+.hvn.tool{background:#fff;border:1px solid var(--hair);color:var(--blue);box-shadow:0 22px 46px rgba(16,28,70,.12);}
+.hvn svg{width:62px;height:62px;}
+.hvlink{width:200px;height:6px;position:relative;background:repeating-linear-gradient(90deg,var(--blue) 0 15px,transparent 15px 30px);opacity:.45;}
+.hvpulse{position:absolute;top:50%;left:0;width:24px;height:24px;border-radius:50%;background:var(--blue);transform:translate(-50%,-50%);box-shadow:0 0 0 8px rgba(29,58,138,.16);}
+
+.dockviz{display:flex;align-items:center;justify-content:center;gap:34px;margin-top:70px;}
+.aichip{width:168px;height:168px;border-radius:32px;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;
+  font-family:'Inter Tight';font-weight:800;font-size:64px;letter-spacing:-1px;box-shadow:0 28px 58px rgba(29,58,138,.32);}
+.dockarrow{font-family:'JetBrains Mono';font-size:58px;font-weight:700;color:var(--blue);}
+.docktools{display:flex;flex-direction:column;gap:18px;align-items:flex-start;}
+.docktools .tool{font-size:40px;padding:14px 26px;border-radius:14px;}
+
+.qviz{display:flex;align-items:center;justify-content:center;gap:40px;margin-top:72px;}
+.qtile{width:240px;height:240px;border-radius:34px;background:#fff;border:1px solid var(--hair);display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:20px;color:var(--muted);box-shadow:0 28px 58px rgba(16,28,70,.12);}
+.qtile svg{width:74px;height:74px;}
+.qtile span{font-family:'JetBrains Mono';font-size:38px;font-weight:600;letter-spacing:3px;}
+.qtile.blue{color:var(--blue);border-color:var(--blue);background:var(--blue-tint);}
+.qmark{font-family:'Inter Tight';font-weight:900;font-size:130px;color:var(--ink);line-height:1;}
+
+.chip .i svg{display:block;}
+
+/* CTA */
+.hero{display:flex;flex-direction:column;align-items:center;gap:20px;margin-bottom:30px;}
+.hero .ic{width:120px;height:120px;background-repeat:no-repeat;background-position:center;background-size:contain;}
+.hero .wm{font-family:'Inter Tight';font-weight:800;font-size:46px;letter-spacing:-1px;color:var(--ink);text-align:center;}
+.hero .wm span{color:var(--muted);font-weight:600;font-size:23px;letter-spacing:7px;display:block;margin-top:6px;}
+.ctabtn{margin-top:24px;background:var(--blue);border-radius:14px;box-shadow:0 30px 70px rgba(29,58,138,.32);padding:38px 54px;}
+.ctabtn .bub{font-family:'Inter Tight';font-size:52px;font-weight:800;color:#fff;display:flex;align-items:center;gap:16px;justify-content:center;letter-spacing:-1px;}
+.ctabtn .key{background:#fff;color:var(--blue);border-radius:8px;padding:.02em .2em;}
+.cta-sub{margin-top:28px;font-family:'Inter';font-size:37px;font-weight:600;color:var(--ink2);}
+.cta-sub .cur{display:inline-block;width:3px;height:32px;background:var(--blue);margin-left:5px;vertical-align:-5px;}
+.foot{margin-top:44px;display:flex;align-items:center;gap:13px;font-family:'JetBrains Mono',monospace;font-size:25px;letter-spacing:2px;color:var(--muted);}
+
+#hint{position:fixed;bottom:12px;left:12px;color:#888;font-family:monospace;font-size:12px;z-index:30;}
+#hint b{color:#bbb;}
+button.ctrl{font-family:monospace;font-size:12px;background:#1c1c1f;color:#ccc;border:1px solid #333;border-radius:6px;padding:5px 10px;margin-left:6px;cursor:pointer;}
+</style>
+</head>
+<body>
+<div id="wrap"><div id="stage">
+  <div id="grid"></div><div id="wash"></div>
+  <div class="sq s1"></div><div class="sq s2"></div><div class="sq s3"></div><div class="sq s4"></div><div class="sq s5"></div><div class="sq s6"></div>
+  <div class="brandbar"><div class="ic icB"></div><div class="wm"><b>Rabbithole</b><span>CONSULTING</span></div></div>
+  <div id="prog"><div id="progfill"><span id="progtip"></span></div></div>
+  <div id="safe">
+    <div class="z ztop"></div><div class="z zbot"></div><div class="z zright"></div>
+    <div class="lbl" style="top:14px;left:20px">TOP UI</div>
+    <div class="lbl" style="bottom:14px;left:20px">CAPTION · USERNAME · NAV — keep clear</div>
+    <div class="lbl" style="right:18px;top:600px;writing-mode:vertical-rl">LIKE / COMMENT / SHARE</div>
+  </div>
+
+  <!-- 01 HOOK -->
+  <section class="scene" data-dur="5300">
+    <h1 class="a s">Everyone keeps<br>saying <span class="hl">MCP</span>.</h1>
+    <div class="hookviz a">
+      <div class="hvn ai pop">AI</div>
+      <div class="hvlink"><span class="hvpulse"></span></div>
+      <div class="hvn tool pop"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 2v6M15 2v6M7 8h10v3a5 5 0 0 1-10 0V8zM12 16v6"/></svg></div>
+    </div>
+    <p class="sub a">Not a <span class="thru">buzzword<i></i></span> — the thing that <b>changes everything.</b></p>
+    <p class="micro a">→ in 50 seconds, you'll get it</p>
+  </section>
+
+  <!-- 02 PLAIN -->
+  <section class="scene" data-dur="5700">
+    <div class="pill a"><span class="dot"></span><b>02</b> / PLAIN</div>
+    <h1 class="a xs"><span class="bl">M</span>odel<br><span class="bl">C</span>ontext<br><span class="bl">P</span>rotocol</h1>
+    <div class="dockviz a">
+      <div class="aichip pop">AI</div>
+      <div class="dockarrow">←</div>
+      <div class="docktools">
+        <span class="tool pop">search()</span>
+        <span class="tool pop">read()</span>
+        <span class="tool pop">create()</span>
+      </div>
+    </div>
+    <p class="sub a">A standard way to hand an AI<br>a set of <b>tools.</b></p>
+  </section>
+
+  <!-- 03 SHIFT -->
+  <section class="scene" data-dur="5300">
+    <div class="pill a"><span class="dot"></span><b>03</b> / THE SHIFT</div>
+    <h1 class="a s">AI that talks<br>→ AI that <span class="hl">does</span>.</h1>
+    <div class="a" style="display:flex;gap:28px;margin-top:54px;align-items:center;">
+      <div class="chip off"><span class="i"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.5 8.5 0 0 1-12.2 7.6L3 21l1.9-5.8A8.5 8.5 0 1 1 21 11.5z"/></svg></span>talks</div>
+      <div style="color:var(--blue);font-size:42px;font-weight:800;letter-spacing:-4px;">━━▶</div>
+      <div class="chip on pop"><span class="i"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2 4 14h7l-1 8 9-12h-7l1-8z"/></svg></span>does</div>
+    </div>
+    <p class="micro a">it pulls real data &amp; takes real action</p>
+  </section>
+
+  <!-- 04 THE PICTURE -->
+  <section class="scene" data-dur="8600">
+    <div class="pill a"><span class="dot"></span><b>04</b> / THE PICTURE</div>
+    <h1 class="a xs" style="margin-bottom:10px">The whole idea,<br>one picture.</h1>
+    <div class="flow">
+      <div class="node a"><div class="ic"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="7" width="16" height="12" rx="2"/><path d="M9 7V4h6v3M9 13h.01M15 13h.01"/></svg></div><div><div class="nt">Any AI agent</div><div class="nd">Claude · ChatGPT · Cursor · your bot</div></div></div>
+      <div class="conlabel a"><span class="av">▼</span> speaks <b>MCP</b></div>
+      <div class="node hot a"><div class="ic"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 7V4M15 7V4M7 7h10v4a5 5 0 0 1-10 0V7zM12 16v4"/></svg></div><div style="flex:1"><div class="nt">MCP Server</div><div class="nd">a set of tools, over HTTP</div><div class="toolrow"><span class="tool">search()</span><span class="tool">read()</span><span class="tool">create()</span></div></div></div>
+      <div class="conlabel a"><span class="av">▼</span> calls</div>
+      <div class="node a"><div class="ic"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7a8 3 0 0 0 16 0 8 3 0 0 0-16 0zM4 7v10a8 3 0 0 0 16 0V7M4 12a8 3 0 0 0 16 0"/></svg></div><div><div class="nt">Your data &amp; apps</div><div class="nd">calendar · CRM · Stripe · Google</div></div></div>
+    </div>
+  </section>
+
+  <!-- 05 TERMINAL -->
+  <section class="scene" data-dur="5500">
+    <div class="pill a"><span class="dot"></span><b>05</b> / IN PRACTICE</div>
+    <h1 class="a s" style="margin-bottom:34px">The AI is just<br><span class="bl">handed</span> the tools.</h1>
+    <div class="card term a">
+      <div class="cardhead"><span class="gd"></span> tools.mcp <span class="dots"><i></i><i></i><i></i></span></div>
+      <div class="tline"><span class="twrap"><span class="p">$</span> <span class="cmd">ai</span>.connect(<span class="arg">"mcp://your-stack"</span>)</span><span class="tcur" id="tcur"></span></div>
+      <div class="tout" id="tout">
+        <div><span class="ok">✓</span> search()</div>
+        <div><span class="ok">✓</span> read()</div>
+        <div><span class="ok">✓</span> create()</div>
+      </div>
+    </div>
+    <p class="micro a" style="margin-top:34px">self-describing · no custom code per app</p>
+  </section>
+
+  <!-- 06 API? -->
+  <section class="scene" data-dur="5700">
+    <div class="pill a"><span class="dot"></span><b>06</b> / WAIT…</div>
+    <h1 class="a">"Isn't that<br>just an <span class="thru">API<i></i></span>?"</h1>
+    <div class="qviz a">
+      <div class="qtile pop"><svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-2.9 1.2V21a2 2 0 1 1-4 0v-.1A1.7 1.7 0 0 0 7 19.4a1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1A1.7 1.7 0 0 0 2.6 14H2.5a2 2 0 1 1 0-4h.1A1.7 1.7 0 0 0 4.3 8a1.7 1.7 0 0 0-.3-1.9L3.9 6a2 2 0 1 1 2.8-2.8l.1.1A1.7 1.7 0 0 0 9 3.6V3.5a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 2.9 1.2l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg><span>API</span></div>
+      <div class="qmark pop">?</div>
+      <div class="qtile blue pop"><svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 2v6M15 2v6M7 8h10v3a5 5 0 0 1-10 0V8zM12 16v6"/></svg><span>MCP</span></div>
+    </div>
+  </section>
+
+  <!-- 07 VS -->
+  <section class="scene" data-dur="10700">
+    <div class="pill a"><span class="dot"></span><b>07</b> / API vs MCP</div>
+    <h1 class="a xs" style="margin:8px 0 40px">Not the same<br>thing.</h1>
+    <div class="vs">
+      <div class="vsbadge pop">vs</div>
+      <div class="col api a">
+        <h3>API</h3>
+        <div class="r"><span class="m">—</span><span>Built for <span class="mk">developers</span></span></div>
+        <div class="r"><span class="m">—</span><span>Every one is different</span></div>
+        <div class="r"><span class="m">—</span><span>Custom code each time</span></div>
+        <div class="r"><span class="m">—</span><span>You read the manual</span></div>
+      </div>
+      <div class="col mcp a">
+        <h3>MCP</h3>
+        <div class="r"><span class="m">✓</span><span>Built for <span class="mk">AI agents</span></span></div>
+        <div class="r"><span class="m">✓</span><span>One standard protocol</span></div>
+        <div class="r"><span class="m">✓</span><span>Connect once</span></div>
+        <div class="r"><span class="m">✓</span><span>AI finds the tools itself</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 08 THE MATH (count-up) -->
+  <section class="scene" data-dur="8200">
+    <div class="pill a"><span class="dot"></span><b>08</b> / THE MATH</div>
+    <h1 class="a xs" style="margin-bottom:6px">Why one standard<br><span class="bl">wins</span>.</h1>
+    <div class="mathwrap a">
+      <div class="mathcard">
+        <div class="mh">old way</div>
+        <div class="bignum" id="mathn">144</div>
+        <div class="mathlbl">custom builds<br>12 apps × 12 tools</div>
+      </div>
+      <div class="matharrow pop">→</div>
+      <div class="mathcard hot pop">
+        <div class="mh">with mcp</div>
+        <div class="bignum">1</div>
+        <div class="mathlbl">standard<br>connect once</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 09 ADAPTER -->
+  <section class="scene" data-dur="6600">
+    <div class="pill a"><span class="dot"></span><b>09</b> / THE ADAPTER</div>
+    <h1 class="a s">MCP sits <span class="bl">on top</span><br>of an API.</h1>
+    <div class="plugwrap a">
+      <div class="plugs">
+        <div class="plug pop"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 2v6M15 2v6M7 8h10v3a5 5 0 0 1-10 0V8zM12 16v6"/></svg></div>
+        <div class="plug pop"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 2v6M15 2v6M7 8h10v3a5 5 0 0 1-10 0V8zM12 16v6"/></svg></div>
+        <div class="plug pop"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 2v6M15 2v6M7 8h10v3a5 5 0 0 1-10 0V8zM12 16v6"/></svg></div>
+      </div>
+      <div class="plugarrow">→</div>
+      <div class="adapter pop"><svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 2v6M15 2v6M7 8h10v3a5 5 0 0 1-10 0V8zM12 16v6"/></svg></div>
+    </div>
+    <p class="sub a" style="margin-top:34px">One adapter that <b>fits them all.</b></p>
+  </section>
+
+  <!-- 09 REAL -->
+  <section class="scene" data-dur="5300">
+    <div class="pill a"><span class="dot"></span><b>10</b> / REAL ONES</div>
+    <h1 class="a s" style="margin-bottom:6px">These exist <span class="hl">today</span>.</h1>
+    <div class="hub">
+      <svg viewBox="0 0 840 560" preserveAspectRatio="none">
+        <path class="dpath"    d="M160,110 C300,160 360,230 420,280"/>
+        <path class="dpath" d="M690,140 C560,190 500,240 420,280"/>
+        <path class="dpath" d="M160,450 C300,400 360,340 420,280"/>
+        <path class="dpath" d="M700,450 C560,400 500,340 420,280"/>
+      </svg>
+      <div class="core pop">AI</div>
+      <div class="conn a" style="left:30px;top:64px"><img class="d" alt="" onerror="this.style.visibility='hidden'" src="https://www.google.com/s2/favicons?domain=claude.ai&sz=64">Claude</div>
+      <div class="conn a" style="right:30px;top:92px"><img class="d" alt="" onerror="this.style.visibility='hidden'" src="https://www.google.com/s2/favicons?domain=youtube.com&sz=64">YouTube</div>
+      <div class="conn a" style="left:30px;bottom:74px"><img class="d" alt="" onerror="this.style.visibility='hidden'" src="https://www.google.com/s2/favicons?domain=stripe.com&sz=64">Stripe</div>
+      <div class="conn a" style="right:18px;bottom:74px"><img class="d" alt="" onerror="this.style.visibility='hidden'" src="https://www.google.com/s2/favicons?domain=higgsfield.ai&sz=64">Higgsfield</div>
+    </div>
+    <div class="hubstat a"><b id="hubn">4</b> apps · <b>1</b> connection</div>
+  </section>
+
+  <!-- 10 SAFE -->
+  <section class="scene" data-dur="10700">
+    <div class="pill a"><span class="dot"></span><b>11</b> / STAY SAFE</div>
+    <h1 class="a xs">5 questions before<br>you <span class="bl">connect</span> anything.</h1>
+    <div class="card a" style="margin-top:42px;width:744px;text-align:left">
+      <div class="cardhead"><span class="gd"></span> checklist.md</div>
+      <div class="code chk"><span class="n">1</span> What can it actually DO?</div>
+      <div class="code chk"><span class="n">2</span> What data does it touch?</div>
+      <div class="code chk"><span class="n">3</span> Where does that data go?</div>
+      <div class="code chk"><span class="n">4</span> Who can use it?</div>
+      <div class="code chk"><span class="n">5</span> What if it's wrong?</div>
+    </div>
+  </section>
+
+  <!-- 11 YOURS -->
+  <section class="scene" data-dur="4700">
+    <div class="pill a"><span class="dot"></span><b>12</b> / YOURS</div>
+    <h1 class="a s" style="margin-bottom:4px">Open standard.<br>Runs on <span class="bl">your</span> machine.</h1>
+    <div class="duo">
+      <div class="bigcard a"><div class="ic"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg></div><div class="t">LOCAL</div><div class="s">your computer</div></div>
+      <div class="bigcard a"><div class="ic"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18 14 14 0 0 1 0-18"/></svg></div><div class="t">OPEN</div><div class="s">free · MIT</div></div>
+    </div>
+  </section>
+
+  <!-- 12 CTA -->
+  <section class="scene" data-dur="5800">
+    <div class="hero a">
+      <div class="ic icB"></div>
+      <div class="wm">Rabbithole<span>CONSULTING</span></div>
+    </div>
+    <h1 class="a xs" style="margin-top:4px">Want the full<br>2-min lesson?</h1>
+    <div class="ctabtn a pop"><div class="bub">Comment <span class="key">"MCPs"</span></div></div>
+    <p class="cta-sub a">and we'll send you the full guide<span class="cur" id="ccur"></span></p>
+    <div class="foot a"><span class="dot"></span> day 1 of 30 free AI kits</div>
+  </section>
+</div></div>
+
+<div id="hint">9:16 · 1080×1920<button class="ctrl" id="replay">⟲ restart</button><button class="ctrl" id="toggle">⏸ pause</button><button class="ctrl" id="safeBtn">safe zones</button> <b>record the stage only</b></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/MotionPathPlugin.min.js"></script>
+<script>
+const stage=document.getElementById('stage');
+function fit(){const s=Math.min(innerWidth/1080,innerHeight/1920);stage.style.transform=`scale(${s})`;}
+addEventListener('resize',fit);fit();
+const G=typeof gsap!=='undefined';
+if(G&&window.MotionPathPlugin)gsap.registerPlugin(MotionPathPlugin);
+const scenes=[...document.querySelectorAll('.scene')];
+const progfill=document.getElementById('progfill');const N=scenes.length;
+
+if(G){
+  document.querySelectorAll('.sq').forEach((s,i)=>gsap.to(s,{y:'+=26',x:'+=10',rotation:i%2?6:-6,duration:5+i,repeat:-1,yoyo:true,ease:'sine.inOut',delay:i*.4}));
+  gsap.from('.brandbar',{opacity:0,x:-20,duration:.8,ease:'power3.out'});
+}
+let idx=0,timer=null,paused=false,flow=[],blink=[];
+function clearFX(){flow.forEach(t=>t.kill());flow=[];blink.forEach(t=>t.kill());blink=[];document.querySelectorAll('.flowdot').forEach(d=>d.remove());}
+
+function typeTerminal(sc){
+  const cur=sc.querySelector('#tcur'),out=sc.querySelector('#tout');
+  if(!cur)return; const wrap=sc.querySelector('.twrap');
+  gsap.set(out,{opacity:0});
+  gsap.set(wrap,{width:0});
+  const fw=wrap.scrollWidth;
+  const b=gsap.to(cur,{opacity:0,duration:.45,repeat:-1,yoyo:true,ease:'steps(1)'});blink.push(b);
+  const rows=[...out.querySelectorAll('div')];
+  gsap.set(rows,{opacity:0,x:-14});
+  const tl=gsap.timeline({delay:.55});
+  tl.to(wrap,{width:fw,duration:1.0,ease:'steps(24)'});
+  tl.to(out,{opacity:1,duration:.01},'+=.15');
+  tl.to(rows,{opacity:1,x:0,duration:.4,stagger:.24,ease:'power2.out'});
+}
+function countUp(sc){
+  const el=sc.querySelector('#hubn');if(!el)return;
+  const o={v:0};gsap.to(o,{v:4,duration:1.2,delay:.6,ease:'power1.out',onUpdate(){el.textContent=Math.round(o.v);}});
+}
+function countMath(sc){
+  const el=sc.querySelector('#mathn');if(!el)return;
+  const o={v:0};gsap.to(o,{v:144,duration:1.35,delay:.5,ease:'power2.out',onUpdate(){el.textContent=Math.round(o.v);}});
+}
+function splitHeadlines(){
+  document.querySelectorAll('.scene h1').forEach(h=>{
+    if(h.dataset.split)return; h.dataset.split=1;
+    const frag=document.createDocumentFragment();
+    [...h.childNodes].forEach(node=>{
+      if(node.nodeName==='BR'){frag.appendChild(document.createElement('br'));return;}
+      if(node.nodeType===3){
+        node.textContent.split(/(\s+)/).forEach(p=>{
+          if(p==='')return;
+          if(/^\s+$/.test(p))frag.appendChild(document.createTextNode(p));
+          else{const s=document.createElement('span');s.className='w';s.textContent=p;frag.appendChild(s);}
+        });
+      } else {const s=document.createElement('span');s.className='w';s.appendChild(node.cloneNode(true));frag.appendChild(s);}
+    });
+    h.innerHTML='';h.appendChild(frag);
+  });
+}
+splitHeadlines();
+function ctaBlink(sc){const c=sc.querySelector('#ccur');if(!c)return;const b=gsap.to(c,{opacity:0,duration:.5,repeat:-1,yoyo:true,ease:'steps(1)'});blink.push(b);}
+function hookPulse(sc){const p=sc.querySelector('.hvpulse');if(!p)return;gsap.set(p,{left:0});flow.push(gsap.to(p,{left:148,duration:1.25,ease:'power1.inOut',repeat:-1,repeatDelay:.15,delay:.6}));}
+
+function animate(sc){
+  if(!G)return;
+  const words=[...sc.querySelectorAll('h1 .w')];
+  const items=[...sc.querySelectorAll('.a')].filter(el=>el.tagName!=='H1');
+  const hls=[...sc.querySelectorAll('.hl')];
+  const pops=[...sc.querySelectorAll('.pop')];
+  const core=sc.querySelector('.core');
+  const paths=[...sc.querySelectorAll('.dpath')];
+  const strikes=[...sc.querySelectorAll('.thru i')];
+  gsap.killTweensOf(items.concat(words,pops,core?[core]:[]));
+  gsap.set(words,{opacity:0,y:46,scale:.84});
+  gsap.set(items,{opacity:0,y:34,scale:.97});
+  gsap.set(hls,{clipPath:'inset(0 102% 0 0)'});
+  gsap.set(strikes,{scaleX:0});
+  if(pops.length)gsap.set(pops,{opacity:0,scale:.4});
+  if(core)gsap.set(core,{opacity:0,scale:.3,rotation:-10});
+  const tl=gsap.timeline();
+  tl.to(words,{opacity:1,y:0,scale:1,duration:.5,ease:'back.out(2.2)',stagger:.055},0);
+  tl.to(items,{opacity:1,y:0,scale:1,duration:.6,ease:'back.out(1.5)',stagger:.1},0.2);
+  if(hls.length)tl.to(hls,{clipPath:'inset(0 0% 0 0)',duration:.5,ease:'power3.out',stagger:.16},'>-0.15');
+  if(strikes.length)tl.to(strikes,{scaleX:1,duration:.4,ease:'power2.out'},'>-0.1');
+  if(core)tl.to(core,{opacity:1,scale:1,rotation:0,duration:.85,ease:'elastic.out(1,.62)'},0.35);
+  if(pops.length)tl.to(pops,{opacity:1,scale:1,duration:.7,ease:'elastic.out(1,.55)',stagger:.12},0.45);
+  if(paths.length){
+    paths.forEach((p,k)=>{const len=p.getTotalLength();gsap.set(p,{strokeDasharray:len,strokeDashoffset:len});
+      tl.to(p,{strokeDashoffset:0,duration:.85,ease:'power2.inOut'},0.4+k*.12);});
+    tl.add(()=>startFlow(sc,paths),'>-0.1');
+  }
+  typeTerminal(sc);countUp(sc);countMath(sc);ctaBlink(sc);hookPulse(sc);
+}
+function startFlow(sc,paths){
+  const svg=sc.querySelector('.hub svg');if(!svg)return;
+  paths.forEach((p,k)=>{for(let n=0;n<2;n++){
+    const c=document.createElementNS('http://www.w3.org/2000/svg','circle');c.setAttribute('r','6');c.setAttribute('class','flowdot');svg.appendChild(c);
+    flow.push(gsap.to(c,{duration:1.7,repeat:-1,ease:'none',delay:k*.2+n*.85,motionPath:{path:p,align:p,alignOrigin:[.5,.5]}}));
+    flow.push(gsap.fromTo(c,{opacity:0},{opacity:.95,duration:.3,repeat:-1,repeatDelay:1.4,yoyo:true,delay:k*.2+n*.85}));
+  }});
+}
+function show(i){
+  clearFX();
+  const next=scenes[i];
+  if(G)gsap.fromTo(progfill,{width:(i/N*100)+'%'},{width:((i+1)/N*100)+'%',duration:(+next.dataset.dur||4400)/1000,ease:'none'});
+  else progfill.style.width=((i+1)/N*100)+'%';
+  scenes.forEach(s=>{if(s!==next){s.classList.remove('active');if(G)gsap.set(s,{opacity:1,y:0});}});
+  next.classList.add('active');
+  if(G)gsap.set(next,{opacity:1,y:0});
+  animate(next);
+  if(!paused)timer=setTimeout(()=>{idx=(i+1)%scenes.length;show(idx);},+next.dataset.dur||4400);
+}
+if(G)show(0);
+else{scenes[0].classList.add('active');let j=0;(function lp(){timer=setTimeout(()=>{scenes[j].classList.remove('active');j=(j+1)%scenes.length;scenes[j].classList.add('active');lp();},+scenes[j].dataset.dur||4400);})();}
+replay.onclick=()=>{clearTimeout(timer);paused=false;toggle.textContent='⏸ pause';idx=0;show(0);};
+toggle.onclick=function(){paused=!paused;this.textContent=paused?'▶ play':'⏸ pause';clearTimeout(timer);if(!paused){idx=(idx+1)%scenes.length;show(idx);}};
+safeBtn.onclick=()=>document.getElementById('safe').classList.toggle('on');
+stage.onclick=()=>{clearTimeout(timer);idx=(idx+1)%scenes.length;show(idx);};
+</script>
+</body>
+</html>
