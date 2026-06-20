@@ -87,6 +87,16 @@ jobs:
             echo "No voiceover.txt or ELEVENLABS_API_KEY/ELEVENLABS_VOICE_ID not set → rendering silent."
           fi
 
+      # Cover is generated BEFORE the render so render.sh can burn it in as the opening
+      # frame (the platform auto-cover = first frame; this keeps it from being the blank hold).
+      - name: Generate cover (first slide)
+        working-directory: _REEL_ENGINE/capture
+        run: |
+          HTML="${{ github.event.inputs.html || 'MCP_Reel_01/mcp_reel_visual.html' }}"
+          mkdir -p "$GITHUB_WORKSPACE/_renders"
+          node capture_cover.js "$GITHUB_WORKSPACE/$HTML" "$GITHUB_WORKSPACE/_renders/cover.png" 3600 \
+            || echo "::warning::cover generation failed (will render without a cover poster)"
+
       - name: Render reel
         working-directory: _REEL_ENGINE/capture
         run: |
@@ -97,15 +107,9 @@ jobs:
           VOICE_ARG=""
           if [ -f "$REEL_DIR/voice.mp3" ]; then VOICE_ARG="$REEL_DIR/voice.mp3";
           elif [ -n "${{ github.event.inputs.voice }}" ]; then VOICE_ARG="$GITHUB_WORKSPACE/${{ github.event.inputs.voice }}"; fi
-          bash render.sh "$GITHUB_WORKSPACE/$HTML" "$SECS" "$GITHUB_WORKSPACE/_renders/$OUTNAME" "$VOICE_ARG"
-
-      - name: Generate cover (first slide)
-        working-directory: _REEL_ENGINE/capture
-        run: |
-          HTML="${{ github.event.inputs.html || 'MCP_Reel_01/mcp_reel_visual.html' }}"
-          mkdir -p "$GITHUB_WORKSPACE/_renders"
-          node capture_cover.js "$GITHUB_WORKSPACE/$HTML" "$GITHUB_WORKSPACE/_renders/cover.png" 3600 \
-            || echo "::warning::cover generation failed (will post without a custom thumbnail)"
+          COVER_ARG=""
+          if [ -f "$GITHUB_WORKSPACE/_renders/cover.png" ]; then COVER_ARG="$GITHUB_WORKSPACE/_renders/cover.png"; fi
+          bash render.sh "$GITHUB_WORKSPACE/$HTML" "$SECS" "$GITHUB_WORKSPACE/_renders/$OUTNAME" "$VOICE_ARG" "$COVER_ARG"
 
       - name: Upload MP4
         uses: actions/upload-artifact@v4
