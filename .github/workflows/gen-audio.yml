@@ -1,0 +1,27 @@
+name: Generate Audio (Ivanna)
+on:
+  workflow_dispatch:
+    inputs:
+      voiceover:
+        description: voiceover txt path
+        required: true
+        default: API_Premium_01/voiceover.txt
+jobs:
+  audio:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Generate Ivanna voiceover
+        env:
+          ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
+          ELEVENLABS_VOICE_ID: ${{ vars.ELEVENLABS_VOICE_ID }}
+        run: |
+          VO="${{ github.event.inputs.voiceover }}"
+          BODY=$(jq -Rs '{text: ., model_id:"eleven_multilingual_v2", voice_settings:{stability:0.35, similarity_boost:0.8, style:0.35, use_speaker_boost:true}}' "$VO")
+          curl -sS -X POST "https://api.elevenlabs.io/v1/text-to-speech/$ELEVENLABS_VOICE_ID" -H "xi-api-key: $ELEVENLABS_API_KEY" -H "Content-Type: application/json" -d "$BODY" --output voice.mp3
+          file voice.mp3
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ivanna-audio
+          path: voice.mp3
+          if-no-files-found: error
