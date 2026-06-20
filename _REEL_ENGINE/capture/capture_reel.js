@@ -23,7 +23,10 @@ const fs = require('fs');
     recordVideo: { dir: tmp, size: { width: 1080, height: 1920 } },
   });
   const page = await context.newPage();
-  await page.goto('file://' + htmlPath, { waitUntil: 'networkidle' });
+  // Load in CAPTURE mode (#capture) so the reel does NOT autoplay — it holds on a blank
+  // first frame until we trigger a single clean pass below. This kills the old
+  // "double intro / restart" glitch (the recorder used to catch the autoplay AND a replay).
+  await page.goto('file://' + htmlPath + '#capture', { waitUntil: 'networkidle' });
 
   // hide the on-screen control bar / safe-zone overlays so they aren't in the video
   await page.addStyleTag({
@@ -33,10 +36,12 @@ const fs = require('fs');
   // wait for webfonts so the first frame isn't a fallback font
   await page.evaluate(() => (document.fonts ? document.fonts.ready : Promise.resolve())).catch(() => {});
 
-  // restart the loop from beat 1 so we capture a clean pass
-  await page.evaluate(() => { const r = document.getElementById('replay'); if (r) r.click(); }).catch(() => {});
-  await page.waitForTimeout(300);
-  await page.evaluate(() => { const r = document.getElementById('replay'); if (r) r.click(); }).catch(() => {});
+  // tiny settle so layout is ready, then start exactly ONE clean pass from beat 1
+  await page.waitForTimeout(250);
+  await page.evaluate(() => {
+    if (typeof window.__startReel === 'function') window.__startReel();
+    else { const r = document.getElementById('replay'); if (r) r.click(); }  // fallback for older reels
+  }).catch(() => {});
 
   await page.waitForTimeout(seconds * 1000);
 
