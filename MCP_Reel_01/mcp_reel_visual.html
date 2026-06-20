@@ -537,11 +537,11 @@ function show(i){
   next.classList.add('active');
   if(G)gsap.set(next,{opacity:1,y:0});
   animate(next);
-  if(!paused)timer=setTimeout(()=>{idx=(i+1)%scenes.length;show(idx);},+next.dataset.dur||4400);
+  if(!paused&&!(window.__noLoop&&i===scenes.length-1))timer=setTimeout(()=>{idx=(i+1)%scenes.length;show(idx);},+next.dataset.dur||4400);
 }
 window.__startReel=function(){if(G)show(0);else{scenes[0].classList.add('active');let j=0;(function lp(){timer=setTimeout(()=>{scenes[j].classList.remove('active');j=(j+1)%scenes.length;scenes[j].classList.add('active');lp();},+scenes[j].dataset.dur||4400);})();}};
 /* In normal viewing the reel autoplays. In capture mode (#capture) it holds on a blank frame until the recorder triggers __startReel() once, so the recording has no autoplay tail or restart. */
-if(!(location.search+location.hash).includes('capture'))window.__startReel();
+if((location.search+location.hash).includes('capture')){window.__noLoop=true;}else{window.__startReel();}
 replay.onclick=()=>{clearTimeout(timer);paused=false;toggle.textContent='⏸ pause';idx=0;show(0);};
 toggle.onclick=function(){paused=!paused;this.textContent=paused?'▶ play':'⏸ pause';clearTimeout(timer);if(!paused){idx=(idx+1)%scenes.length;show(idx);}};
 safeBtn.onclick=()=>document.getElementById('safe').classList.toggle('on');

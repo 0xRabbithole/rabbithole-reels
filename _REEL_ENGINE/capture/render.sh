@@ -22,9 +22,12 @@ WEBM="$(grep '^RAW_WEBM=' /tmp/cap.log | tail -1 | cut -d= -f2-)"
 
 echo "▶ Transcoding to $OUT ..."
 if [ -n "$VOICE" ] && [ -f "$VOICE" ]; then
+  # -af apad + -shortest: pad the voiceover with trailing silence so the VIDEO sets the
+  # length. This keeps the full reel including the final CTA card held at the end, instead
+  # of -shortest trimming the video down to where the narration stops.
   ffmpeg -y -i "$WEBM" -i "$VOICE" \
     -vf "scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,fps=30,format=yuv420p" \
-    -c:v libx264 -crf 18 -preset medium -c:a aac -b:a 192k -shortest "$OUT"
+    -c:v libx264 -crf 18 -preset medium -c:a aac -b:a 192k -af apad -shortest "$OUT"
 else
   ffmpeg -y -i "$WEBM" \
     -vf "scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,fps=30,format=yuv420p" \
