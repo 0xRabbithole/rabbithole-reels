@@ -9,6 +9,8 @@ on:
 jobs:
   audio:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
       - name: Generate Ivanna voiceover
@@ -20,8 +22,10 @@ jobs:
           BODY=$(jq -Rs '{text: ., model_id:"eleven_multilingual_v2", voice_settings:{stability:0.35, similarity_boost:0.8, style:0.35, use_speaker_boost:true}}' "$VO")
           curl -sS -X POST "https://api.elevenlabs.io/v1/text-to-speech/$ELEVENLABS_VOICE_ID" -H "xi-api-key: $ELEVENLABS_API_KEY" -H "Content-Type: application/json" -d "$BODY" --output voice.mp3
           file voice.mp3
-      - uses: actions/upload-artifact@v4
-        with:
-          name: ivanna-audio
-          path: voice.mp3
-          if-no-files-found: error
+      - name: Publish audio as public release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="audio-${{ github.run_id }}"
+          gh release create "$TAG" voice.mp3 --title "ivanna-audio" --notes "API Ivanna track" --repo "$GITHUB_REPOSITORY"
+          echo "AUDIO_URL=https://github.com/$GITHUB_REPOSITORY/releases/download/$TAG/voice.mp3"
