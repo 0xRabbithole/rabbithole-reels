@@ -51,15 +51,34 @@ jobs:
           npm install playwright
           npx playwright install --with-deps chromium
 
+      - name: Generate voiceover (ElevenLabs · Ivanna)
+        env:
+          ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
+          ELEVENLABS_VOICE_ID: ${{ vars.ELEVENLABS_VOICE_ID }}
+        run: |
+          HTML="${{ github.event.inputs.html || 'MCP_Reel_01/mcp_reel_visual.html' }}"
+          REEL_DIR="$GITHUB_WORKSPACE/$(dirname "$HTML")"
+          if [ -f "$REEL_DIR/voiceover.txt" ] && [ -n "$ELEVENLABS_API_KEY" ] && [ -n "$ELEVENLABS_VOICE_ID" ]; then
+            echo "Generating Ivanna voiceover from voiceover.txt ..."
+            BODY=$(jq -Rs '{text: ., model_id:"eleven_multilingual_v2", voice_settings:{stability:0.35, similarity_boost:0.8, style:0.35, use_speaker_boost:true}}' "$REEL_DIR/voiceover.txt")
+            curl -sS -X POST "https://api.elevenlabs.io/v1/text-to-speech/$ELEVENLABS_VOICE_ID" \
+              -H "xi-api-key: $ELEVENLABS_API_KEY" -H "Content-Type: application/json" \
+              -d "$BODY" --output "$REEL_DIR/voice.mp3"
+            if file "$REEL_DIR/voice.mp3" | grep -qiE 'audio|mpeg'; then echo "✓ voice.mp3 generated"; else echo "::warning::ElevenLabs returned no audio (check key/voice id/credits)"; head -c 400 "$REEL_DIR/voice.mp3"; rm -f "$REEL_DIR/voice.mp3"; fi
+          else
+            echo "No voiceover.txt or ELEVENLABS_API_KEY/ELEVENLABS_VOICE_ID not set → rendering silent."
+          fi
+
       - name: Render reel
         working-directory: _REEL_ENGINE/capture
         run: |
           HTML="${{ github.event.inputs.html || 'MCP_Reel_01/mcp_reel_visual.html' }}"
           SECS="${{ github.event.inputs.seconds || '90' }}"
           OUTNAME="${{ github.event.inputs.out || 'reel.mp4' }}"
-          VOICE_IN="${{ github.event.inputs.voice }}"
+          REEL_DIR="$GITHUB_WORKSPACE/$(dirname "$HTML")"
           VOICE_ARG=""
-          if [ -n "$VOICE_IN" ]; then VOICE_ARG="$GITHUB_WORKSPACE/$VOICE_IN"; fi
+          if [ -f "$REEL_DIR/voice.mp3" ]; then VOICE_ARG="$REEL_DIR/voice.mp3";
+          elif [ -n "${{ github.event.inputs.voice }}" ]; then VOICE_ARG="$GITHUB_WORKSPACE/${{ github.event.inputs.voice }}"; fi
           bash render.sh "$GITHUB_WORKSPACE/$HTML" "$SECS" "$GITHUB_WORKSPACE/_renders/$OUTNAME" "$VOICE_ARG"
 
       - name: Upload MP4
