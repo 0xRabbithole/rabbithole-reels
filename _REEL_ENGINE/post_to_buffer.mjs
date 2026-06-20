@@ -119,13 +119,17 @@ const modePart = dueAt
 
 let failures = 0;
 for (const ch of targets) {
+  // Instagram requires a post type (post | story | reel) via network metadata.
+  // We publish vertical video as a Reel. TikTok needs no extra metadata.
+  const svc = String(ch.service).toLowerCase();
+  const metaPart = svc === "instagram" ? `\n      metadata: { instagram: { type: reel } }` : "";
   const mutation = `mutation {
     createPost(input: {
       text: "${esc(caption)}"
       channelId: "${esc(ch.id)}"
       schedulingType: ${schedulingType}
       ${modePart}
-      assets: ${assets}
+      assets: ${assets}${metaPart}
     }) {
       ... on PostActionSuccess { post { id status dueAt } }
       ... on MutationError { message }
