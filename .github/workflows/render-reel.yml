@@ -99,6 +99,14 @@ jobs:
           elif [ -n "${{ github.event.inputs.voice }}" ]; then VOICE_ARG="$GITHUB_WORKSPACE/${{ github.event.inputs.voice }}"; fi
           bash render.sh "$GITHUB_WORKSPACE/$HTML" "$SECS" "$GITHUB_WORKSPACE/_renders/$OUTNAME" "$VOICE_ARG"
 
+      - name: Generate cover (first slide)
+        working-directory: _REEL_ENGINE/capture
+        run: |
+          HTML="${{ github.event.inputs.html || 'MCP_Reel_01/mcp_reel_visual.html' }}"
+          mkdir -p "$GITHUB_WORKSPACE/_renders"
+          node capture_cover.js "$GITHUB_WORKSPACE/$HTML" "$GITHUB_WORKSPACE/_renders/cover.png" 3600 \
+            || echo "::warning::cover generation failed (will post without a custom thumbnail)"
+
       - name: Upload MP4
         uses: actions/upload-artifact@v4
         with:
@@ -107,24 +115,31 @@ jobs:
           if-no-files-found: error
           retention-days: 30
 
-      # ---- Publish + schedule (only when schedule=true) -----------------------
-      # Buffer's API needs the video at a PUBLIC URL. A GitHub Release asset is one.
-      - name: Publish MP4 as a public Release asset
-        if: ${{ github.event.inputs.schedule == 'true' }}
+      # ---- Publish a public Release (MP4 + cover) -----------------------------
+      # Buffer's API needs media at a PUBLIC URL; a GitHub Release asset is one.
+      # Runs on every manual dispatch so each render has a public MP4 + cover to
+      # review. Scheduling to Buffer is a separate, opt-in step below.
+      - name: Publish MP4 + cover as a public Release asset
+        if: ${{ github.event_name == 'workflow_dispatch' }}
         id: release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           OUTNAME="${{ github.event.inputs.out || 'reel.mp4' }}"
           TAG="reel-${{ github.run_id }}"
-          gh release create "$TAG" "_renders/$OUTNAME" \
+          ASSETS=( "_renders/$OUTNAME" )
+          [ -f "_renders/cover.png" ] && ASSETS+=( "_renders/cover.png" )
+          gh release create "$TAG" "${ASSETS[@]}" \
             --title "$OUTNAME" \
-            --notes "Auto-published rendered reel for Buffer scheduling." \
+            --notes "Auto-published rendered reel + cover." \
             --repo "$GITHUB_REPOSITORY"
-          OWNER_REPO="$GITHUB_REPOSITORY"
-          URL="https://github.com/$OWNER_REPO/releases/download/$TAG/$OUTNAME"
-          echo "video_url=$URL" >> "$GITHUB_OUTPUT"
-          echo "Public MP4 URL: $URL"
+          BASE="https://github.com/$GITHUB_REPOSITORY/releases/download/$TAG"
+          echo "video_url=$BASE/$OUTNAME" >> "$GITHUB_OUTPUT"
+          echo "Public MP4 URL: $BASE/$OUTNAME"
+          if [ -f "_renders/cover.png" ]; then
+            echo "cover_url=$BASE/cover.png" >> "$GITHUB_OUTPUT"
+            echo "Public cover URL: $BASE/cover.png"
+          fi
 
       - name: Schedule on Buffer
         if: ${{ github.event.inputs.schedule == 'true' }}
@@ -139,6 +154,7 @@ jobs:
           DUE="${{ github.event.inputs.due_at }}"
           SERVICES="${{ github.event.inputs.services || 'instagram,tiktok' }}"
           ARGS=( --video-url "${{ steps.release.outputs.video_url }}" --services "$SERVICES" )
+          if [ -n "${{ steps.release.outputs.cover_url }}" ]; then ARGS+=( --thumb-url "${{ steps.release.outputs.cover_url }}" ); fi
           if [ -f "$GITHUB_WORKSPACE/$CAPTION" ]; then ARGS+=( --caption-file "$GITHUB_WORKSPACE/$CAPTION" ); fi
           if [ -n "$DUE" ]; then ARGS+=( --due-at "$DUE" ); fi
           node "$GITHUB_WORKSPACE/_REEL_ENGINE/post_to_buffer.mjs" "${ARGS[@]}"
