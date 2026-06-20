@@ -26,6 +26,22 @@ on:
         description: "Output filename"
         required: true
         default: "reel.mp4"
+      schedule:
+        description: "Also schedule to Buffer? (true/false)"
+        required: false
+        default: "false"
+      caption_file:
+        description: "Caption .txt (path from repo root) — used when scheduling"
+        required: false
+        default: "MCP_Reel_01/caption.txt"
+      services:
+        description: "Buffer channels to post to (comma list)"
+        required: false
+        default: "instagram,tiktok"
+      due_at:
+        description: "Schedule time, ISO 8601 UTC (blank = add to Buffer queue)"
+        required: false
+        default: ""
   push:
     paths:
       - "**/mcp_reel_visual.html"
@@ -35,6 +51,8 @@ jobs:
   render:
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    permissions:
+      contents: write   # needed to publish the MP4 as a public Release asset
     steps:
       - uses: actions/checkout@v4
 
@@ -88,3 +106,39 @@ jobs:
           path: _renders/*.mp4
           if-no-files-found: error
           retention-days: 30
+
+      # ---- Publish + schedule (only when schedule=true) -----------------------
+      # Buffer's API needs the video at a PUBLIC URL. A GitHub Release asset is one.
+      - name: Publish MP4 as a public Release asset
+        if: ${{ github.event.inputs.schedule == 'true' }}
+        id: release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          OUTNAME="${{ github.event.inputs.out || 'reel.mp4' }}"
+          TAG="reel-${{ github.run_id }}"
+          gh release create "$TAG" "_renders/$OUTNAME" \
+            --title "$OUTNAME" \
+            --notes "Auto-published rendered reel for Buffer scheduling." \
+            --repo "$GITHUB_REPOSITORY"
+          OWNER_REPO="$GITHUB_REPOSITORY"
+          URL="https://github.com/$OWNER_REPO/releases/download/$TAG/$OUTNAME"
+          echo "video_url=$URL" >> "$GITHUB_OUTPUT"
+          echo "Public MP4 URL: $URL"
+
+      - name: Schedule on Buffer
+        if: ${{ github.event.inputs.schedule == 'true' }}
+        env:
+          BUFFER_TOKEN: ${{ secrets.BUFFER_TOKEN }}
+        run: |
+          if [ -z "$BUFFER_TOKEN" ]; then
+            echo "::error::BUFFER_TOKEN secret is not set — add it in repo Settings → Secrets."
+            exit 1
+          fi
+          CAPTION="${{ github.event.inputs.caption_file || 'MCP_Reel_01/caption.txt' }}"
+          DUE="${{ github.event.inputs.due_at }}"
+          SERVICES="${{ github.event.inputs.services || 'instagram,tiktok' }}"
+          ARGS=( --video-url "${{ steps.release.outputs.video_url }}" --services "$SERVICES" )
+          if [ -f "$GITHUB_WORKSPACE/$CAPTION" ]; then ARGS+=( --caption-file "$GITHUB_WORKSPACE/$CAPTION" ); fi
+          if [ -n "$DUE" ]; then ARGS+=( --due-at "$DUE" ); fi
+          node "$GITHUB_WORKSPACE/_REEL_ENGINE/post_to_buffer.mjs" "${ARGS[@]}"
