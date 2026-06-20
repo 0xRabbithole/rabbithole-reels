@@ -122,7 +122,7 @@ for (const ch of targets) {
   // Instagram requires a post type (post | story | reel) via network metadata.
   // We publish vertical video as a Reel. TikTok needs no extra metadata.
   const svc = String(ch.service).toLowerCase();
-  const metaPart = svc === "instagram" ? `\n      metadata: { instagram: { type: reel } }` : "";
+  const metaPart = svc === "instagram" ? `\n      metadata: { instagram: { type: reel, shouldShareToFeed: true } }` : "";
   const mutation = `mutation {
     createPost(input: {
       text: "${esc(caption)}"
