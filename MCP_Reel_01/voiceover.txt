@@ -1,25 +1,15 @@
-Everyone keeps saying MCP — and almost nobody can explain it. Fifty seconds.
+You've used an API about a hundred times today. And I'd bet you didn't notice a single one.
 
-MCP. Model Context Protocol. A standard way to hand an AI a set of tools.
+Stick with me for sixty seconds, because once you see it, you're going to spot them everywhere.
 
-It turns an AI that only talks into one that actually does things.
+Okay, so an API is just how two apps talk to each other. Picture a waiter. You don't walk into the kitchen and cook your own food, right? You tell the waiter what you want, he takes that order back, and he brings out exactly what you asked for. That's it. That's an API.
 
-The whole idea: any AI speaks MCP to a server full of tools — and that server touches your real apps and data.
+And it's the same move every single time. You send a request, the server sends back a response. That response usually shows up as JSON, which sounds technical, but it's really just data lined up so cleanly that both sides read it the exact same way.
 
-No custom code. The AI just gets handed the tools and uses them.
+You send those requests to specific spots called endpoints, and most of the time you need a key to get in. Think password, but for software.
 
-Now — isn't that just an API? Fair question. It's the number-one mix-up.
+There are rules too. Rate limits stop you from asking a thousand times a second, and a style called REST keeps the whole thing clean and predictable.
 
-Not quite. An API is built for developers, and every one's different. MCP is built for AI — one standard, and the AI finds the tools itself.
+So here's where it clicks. Checking the weather, booking a flight, logging in with Google. That was all APIs, quietly, the entire time.
 
-The math? Without it, twelve apps and twelve tools is a hundred forty-four custom builds. With MCP — one.
-
-Because MCP sits on top of an API: the one universal adapter that fits them all.
-
-And they exist today — Claude, YouTube, Stripe, wired straight into your AI.
-
-Before you connect AI to anything, ask: what can it do, what data it touches, where that goes, who can use it, and what if it's wrong.
-
-Best part — it's open, and it runs on your own machine.
-
-Want the full lesson? Comment MCPs and we'll send you the guide.
+Told you. You can't unsee it now. So if you want the full beginner breakdown, comment APIs and I'll send you our free guide at rabbithole.consulting/learn/api.
