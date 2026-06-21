@@ -1,0 +1,345 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>What is an API · Premium DRAFT (split + captions + Ivanna)</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Instrument+Serif:ital@0;1&display=swap');
+:root{--ink:#14161c;--blue:#0a84ff;--blue2:#3b5bff;--glass:rgba(255,255,255,0.55);--glass-brd:rgba(255,255,255,0.8)}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{background:#0b0c10;display:flex;align-items:center;justify-content:center;height:100vh;width:100vw;overflow:hidden;font-family:'Inter',system-ui,sans-serif}
+#scaler{width:1080px;height:1920px;transform-origin:center center;flex:0 0 auto}
+#stage{position:relative;width:1080px;height:1920px;overflow:hidden;color:var(--ink);
+  background:radial-gradient(120% 90% at 18% 8%,#eaf0ff 0%,rgba(234,240,255,0) 55%),radial-gradient(120% 90% at 88% 22%,#ffe9df 0%,rgba(255,233,223,0) 50%),radial-gradient(120% 100% at 80% 92%,#e7ddff 0%,rgba(231,221,255,0) 55%),radial-gradient(120% 100% at 10% 95%,#dbf3ec 0%,rgba(219,243,236,0) 55%),linear-gradient(180deg,#eef1f7 0%,#e9edf4 100%)}
+.blob{position:absolute;border-radius:50%;filter:blur(60px);opacity:.55;mix-blend-mode:multiply;will-change:transform}
+.b1{width:680px;height:680px;left:-180px;top:-120px;background:radial-gradient(circle,#a9c6ff,transparent 65%)}
+.b2{width:620px;height:620px;right:-160px;top:140px;background:radial-gradient(circle,#ffc7ad,transparent 65%)}
+.b3{width:720px;height:720px;left:-120px;bottom:-160px;background:radial-gradient(circle,#cdb8ff,transparent 65%)}
+.b4{width:560px;height:560px;right:-120px;bottom:60px;background:radial-gradient(circle,#a8ecd6,transparent 65%)}
+#grain{position:absolute;inset:0;pointer-events:none;opacity:.05;mix-blend-mode:overlay;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+
+/* full-screen scenes (after 10s) live in the TOP-anchored stage area */
+.scene{position:absolute;inset:0;display:none;align-items:center;justify-content:center;flex-direction:column;padding:150px 96px 260px;text-align:center}
+.scene.active{display:flex}
+.glass{background:var(--glass);-webkit-backdrop-filter:blur(34px) saturate(1.7);backdrop-filter:blur(34px) saturate(1.7);border:1.5px solid var(--glass-brd);border-radius:40px;box-shadow:0 30px 80px rgba(50,70,120,.18),inset 0 1px 0 rgba(255,255,255,.9),inset 0 -30px 60px rgba(255,255,255,.25);position:relative;overflow:hidden}
+.kicker{font-size:30px;font-weight:600;letter-spacing:.32em;text-transform:uppercase;color:#6b7280}
+.kicker .dot{display:inline-block;width:11px;height:11px;border-radius:50%;background:var(--blue);margin-right:18px;vertical-align:middle}
+.serif{font-family:'Instrument Serif',Georgia,serif;font-style:italic}
+.sub{font-size:40px;font-weight:500;color:#4a5060;line-height:1.32;max-width:820px}
+.chip{font-size:26px;font-weight:600;color:#fff;background:linear-gradient(180deg,var(--blue2),var(--blue));padding:12px 26px;border-radius:999px;box-shadow:0 12px 30px rgba(10,90,255,.35)}
+.tile{width:128px;height:128px;border-radius:32px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.74);-webkit-backdrop-filter:blur(16px) saturate(1.3);backdrop-filter:blur(16px) saturate(1.3);border:1.5px solid rgba(255,255,255,.92);box-shadow:0 22px 46px rgba(40,50,90,.20),inset 0 2px 0 rgba(255,255,255,.95);position:absolute;will-change:transform}
+.tile img{width:56%;height:56%;object-fit:contain;display:block}
+.tile.lg{width:180px;height:180px;border-radius:46px}
+.core{width:220px;height:220px;border-radius:58px;display:flex;align-items:center;justify-content:center;flex-direction:column;background:linear-gradient(160deg,#1b1e27,#2a2f3d);color:#fff;box-shadow:0 40px 90px rgba(20,30,60,.4),inset 0 2px 0 rgba(255,255,255,.18);position:relative}
+.core .lbl{font-size:32px;font-weight:700}.core .sm{font-size:19px;color:#aeb6c6;margin-top:4px}
+.dm{display:flex;gap:22px;align-items:flex-start;padding:30px 36px;max-width:760px;text-align:left}
+.dm .av{width:80px;height:80px;border-radius:22px;flex:0 0 auto;background:linear-gradient(160deg,#1b1e27,#2a2f3d)}
+.dm .t1{font-weight:700;font-size:32px}.dm .t2{font-size:30px;color:#4a5060;margin-top:8px;line-height:1.3}
+.link{color:var(--blue);font-weight:600}
+#chrome{position:absolute;inset:0;pointer-events:none;z-index:40}
+.glasschip{background:var(--glass);-webkit-backdrop-filter:blur(24px) saturate(1.6);backdrop-filter:blur(24px) saturate(1.6);border:1.5px solid var(--glass-brd);box-shadow:0 16px 40px rgba(50,70,120,.16),inset 0 1px 0 rgba(255,255,255,.9)}
+.hf2 .top{position:absolute;top:60px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:12px;padding:14px 30px;border-radius:999px;white-space:nowrap;z-index:45}
+.hf2 .top img{width:36px;height:36px;border-radius:11px}
+.hf2 .top b{font-size:27px;font-weight:700;line-height:36px}
+.hf2 .top .c{font-size:22px;color:#7a8195;font-weight:600;line-height:36px;margin-left:-4px}
+.hf2 .bot{position:absolute;bottom:44px;left:50%;transform:translateX(-50%);padding:15px 32px;border-radius:999px;font-size:24px;font-weight:600;color:#28324a;white-space:nowrap;z-index:45}
+.viz{position:relative;width:900px;min-height:560px;display:flex;align-items:center;justify-content:center}
+.aarrow{font-size:54px;color:#9aa6bd}
+.acol{display:flex;flex-direction:column;gap:18px}
+.atile{width:112px;height:112px;border-radius:28px;background:rgba(255,255,255,.80);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);border:1.5px solid rgba(255,255,255,.92);box-shadow:0 16px 34px rgba(40,50,90,.18);display:flex;align-items:center;justify-content:center}
+.atile img{width:56%;height:56%;object-fit:contain}
+.atile svg{width:54%;height:54%}
+.ahub{width:200px;height:200px;border-radius:52px;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;background:linear-gradient(160deg,#3b5bff,#0a84ff);box-shadow:0 30px 70px rgba(10,90,255,.4),inset 0 2px 0 rgba(255,255,255,.3)}
+.ahub b{font-size:46px;font-weight:800}.ahub span{font-size:19px;opacity:.85}
+.acore{width:140px;height:140px;border-radius:40px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:30px;font-weight:700;color:#fff;background:linear-gradient(160deg,#1b1e27,#2a2f3d);box-shadow:0 24px 56px rgba(20,30,60,.4)}
+.acore span{font-size:17px;color:#aeb6c6;font-weight:600;margin-top:4px}
+/* request / response two-way */
+.rr{display:flex;flex-direction:column;gap:40px;align-items:center}
+.rrnode{display:flex;align-items:center;gap:40px}
+.rrflow{display:flex;flex-direction:column;gap:18px;width:420px}
+.rrbar{position:relative;height:64px;border-radius:20px;display:flex;align-items:center;padding:0 26px;font-size:26px;font-weight:700;color:#fff;overflow:hidden}
+.rrbar.req{background:linear-gradient(90deg,#3b5bff,#0a84ff);justify-content:flex-start}
+.rrbar.res{background:linear-gradient(90deg,#1b1e27,#2a2f3d);justify-content:flex-end}
+.rrbar .ar{font-size:30px}
+/* JSON card */
+.code{font-family:'JetBrains Mono','SF Mono',ui-monospace,monospace;text-align:left;font-size:34px;line-height:1.5;color:#2a3550}
+.code .k{color:#0a84ff}.code .s{color:#1d9a6c}.code .p{color:#9aa6bd}
+/* endpoints */
+.eps{display:flex;flex-direction:column;gap:18px;width:720px}
+.ep{display:flex;align-items:center;gap:22px;padding:22px 30px;border-radius:22px;background:var(--glass);-webkit-backdrop-filter:blur(24px) saturate(1.6);backdrop-filter:blur(24px) saturate(1.6);border:1.5px solid var(--glass-brd);box-shadow:0 18px 44px rgba(50,70,120,.12)}
+.ep .verb{flex:0 0 auto;padding:8px 18px;border-radius:12px;font-size:24px;font-weight:800;color:#fff;background:linear-gradient(180deg,#3b5bff,#0a84ff)}
+.ep .path{font-family:'JetBrains Mono',monospace;font-size:34px;font-weight:600;color:#1c2230}
+/* auth key */
+.auth{display:flex;align-items:center;gap:40px}
+.authcard{width:230px;height:230px;border-radius:48px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:20px}
+.authcard svg{width:96px;height:96px}.authcard .al{font-size:30px;font-weight:700;color:#1c2230;text-align:center}
+.authcard.go{background:linear-gradient(160deg,rgba(29,154,108,.16),rgba(29,154,108,.05))}
+/* rules */
+.rules{display:flex;gap:40px}
+.rule{width:340px;padding:44px 36px;border-radius:40px;display:flex;flex-direction:column;align-items:center;gap:22px;text-align:center}
+.rule .rl{font-size:38px;font-weight:800}.rule .rd{font-size:26px;color:#5a6275;font-weight:500;line-height:1.32}
+.meter{width:230px;height:24px;border-radius:999px;background:rgba(120,130,160,.22);overflow:hidden;position:relative}
+.meter i{position:absolute;left:0;top:0;height:100%;width:62%;border-radius:999px;background:linear-gradient(90deg,#3b5bff,#0a84ff)}
+.restbadge{font-family:'JetBrains Mono',monospace;font-size:46px;font-weight:800;letter-spacing:.04em;background:linear-gradient(180deg,#3b5bff,#0a84ff);-webkit-background-clip:text;background-clip:text;color:transparent}
+
+/* ---------- split-screen intro (0-10s): graphics TOP, head BOTTOM ---------- */
+#introsplit{position:absolute;inset:0;display:none;flex-direction:column;z-index:25}
+.introtop{height:960px;display:flex;align-items:center;justify-content:center;padding:150px 70px 40px}
+.introhook{padding:48px 56px 54px;text-align:center;max-width:940px;width:100%;display:flex;flex-direction:column;align-items:center;gap:22px}
+.introhook .big{font-size:128px;font-weight:800;letter-spacing:-.03em;line-height:.96}
+.introhook .big .b{background:linear-gradient(180deg,#3b5bff,#0a84ff);-webkit-background-clip:text;background-clip:text;color:transparent}
+.herologos{display:flex;gap:18px;margin-top:6px}
+.hlogo{width:96px;height:96px;border-radius:26px;background:rgba(255,255,255,.78);border:1.5px solid rgba(255,255,255,.92);box-shadow:0 16px 34px rgba(40,50,90,.18);display:flex;align-items:center;justify-content:center}
+.hlogo img{width:54%;height:54%;object-fit:contain}
+.introbot{height:960px;position:relative;overflow:hidden;border-top:3px solid rgba(255,255,255,.7)}
+.introbot video{width:100%;height:100%;object-fit:cover;object-position:center 32%;display:block;background:#0b0c10}
+
+/* ---------- captions ("transcription in the middle") ---------- */
+#caption{position:absolute;left:50%;transform:translateX(-50%);width:max-content;max-width:880px;text-align:center;z-index:50;
+  padding:20px 38px;border-radius:26px;font-size:46px;font-weight:700;line-height:1.18;color:#15203a;
+  background:rgba(255,255,255,.72);-webkit-backdrop-filter:blur(22px) saturate(1.6);backdrop-filter:blur(22px) saturate(1.6);
+  border:1.5px solid var(--glass-brd);box-shadow:0 18px 50px rgba(40,55,110,.22);display:none}
+#caption .hl{color:var(--blue)}
+#caption.mid{top:884px}      /* straddles the 50/50 seam, hovering over both halves */
+#caption.low{top:1430px}     /* lower third during full-screen graphics */
+
+#play{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:24px;background:rgba(8,10,16,.55);z-index:80;cursor:pointer;color:#fff}
+#play .tri{width:118px;height:118px;border-radius:50%;background:rgba(255,255,255,.16);border:2px solid rgba(255,255,255,.7);display:flex;align-items:center;justify-content:center}
+#play .tri::after{content:"";border-left:40px solid #fff;border-top:25px solid transparent;border-bottom:25px solid transparent;margin-left:10px}
+#play .lab{font-size:40px;font-weight:600}#play .sub2{font-size:25px;color:#c8ccd6}
+/* capture-mode: lighten GPU-heavy blur so headless paints a smooth 30fps (look stays ~same) */
+html.cap .glass,html.cap .glasschip,html.cap .tile,html.cap .atile,html.cap .layer,html.cap .qrow,html.cap .introhook,html.cap #caption,html.cap .hlogo,html.cap .ep,html.cap .authcard,html.cap .rule,html.cap .rrbar{backdrop-filter:blur(13px) saturate(1.45)!important;-webkit-backdrop-filter:blur(13px) saturate(1.45)!important}
+html.cap .blob{filter:blur(40px)!important}
+html.cap .introbot{background:#11141b}
+</style>
+</head>
+<body>
+<div id="scaler">
+<div id="stage">
+  <div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div><div class="blob b4"></div>
+  <div id="grain"></div>
+  <div id="chrome"></div>
+
+  <!-- BEAT 1: define (waiter / two apps talking) -->
+  <section class="scene" data-dur="12000" id="define">
+    <div class="kicker a" style="position:absolute;top:200px"><span class="dot"></span>Two apps, talking</div>
+    <div id="waiterViz" class="viz"></div>
+  </section>
+  <!-- BEAT 2: request / response -->
+  <section class="scene" data-dur="11000" id="reqres">
+    <div class="kicker a" style="position:absolute;top:200px"><span class="dot"></span>The same move, every time</div>
+    <div id="rrViz" class="viz"></div>
+  </section>
+  <!-- BEAT 3: JSON -->
+  <section class="scene" data-dur="10000" id="json">
+    <div class="kicker a" style="position:absolute;top:200px"><span class="dot"></span>The reply comes back as JSON</div>
+    <div class="glass a" style="padding:48px 54px;max-width:760px">
+      <pre class="code"><span class="p">{</span>
+  <span class="k">"city"</span>: <span class="s">"San Juan"</span>,
+  <span class="k">"temp"</span>: <span class="s">84</span>,
+  <span class="k">"sky"</span>: <span class="s">"clear"</span>
+<span class="p">}</span></pre>
+    </div>
+    <div class="sub a" style="margin-top:34px;font-size:34px">Just data, lined up so both sides read it the same way.</div>
+  </section>
+  <!-- BEAT 4: endpoints -->
+  <section class="scene" data-dur="9000" id="endpoints">
+    <div class="kicker a" style="position:absolute;top:200px"><span class="dot"></span>You ask at specific endpoints</div>
+    <div id="epViz" class="viz"></div>
+  </section>
+  <!-- BEAT 5: auth key -->
+  <section class="scene" data-dur="9000" id="auth">
+    <div class="kicker a" style="position:absolute;top:200px"><span class="dot"></span>And you need a key to get in</div>
+    <div id="authViz" class="viz"></div>
+  </section>
+  <!-- BEAT 6: rules (rate limits + REST) -->
+  <section class="scene" data-dur="11000" id="rules">
+    <div class="kicker a" style="position:absolute;top:200px"><span class="dot"></span>There are rules, too</div>
+    <div id="rulesViz" class="viz"></div>
+  </section>
+  <!-- BEAT 7: today / everyday APIs -->
+  <section class="scene" data-dur="10000" id="today">
+    <div class="kicker a" style="position:absolute;top:200px"><span class="dot"></span>You use them all day</div>
+    <div id="todayViz" class="viz"></div>
+  </section>
+  <!-- BEAT 8: CTA -->
+  <section class="scene" data-dur="8000" id="cta">
+    <div class="kicker a" style="position:absolute;top:200px"><span class="dot"></span>Want the full beginner guide?</div>
+    <div class="glass a" style="padding:54px 56px;max-width:840px;display:flex;flex-direction:column;align-items:center;gap:30px">
+      <div style="font-size:54px;font-weight:700">Comment <span class="chip" style="font-size:44px;padding:14px 32px;vertical-align:4px">APIs</span></div>
+      <div class="glass dm" style="padding:28px 32px;border-radius:28px">
+        <div class="av" style="background:#fff;display:flex;align-items:center;justify-content:center;overflow:hidden"><img src="favicon-512.png" style="width:100%;height:100%;object-fit:cover;border-radius:22px"></div>
+        <div><div class="t1">Rabbithole · now</div><div class="t2">Here's your free guide <span class="link" style="font-weight:800">↓</span><br><span class="link">rabbithole.consulting/learn/api</span></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- split-screen intro: graphics top, head bottom -->
+  <div id="introsplit">
+    <div class="introtop">
+      <div class="glass introhook">
+        <div class="kicker"><span class="dot"></span>You use it 100 times a day</div>
+        <div class="big">What is an <span class="b">API</span><span style="color:var(--blue)">?</span></div>
+        <div class="sub" style="font-size:30px">Application Programming Interface</div>
+        <div class="herologos">
+          <div class="hlogo"><img src="logos/gmail.svg"></div>
+          <div class="hlogo"><img src="logos/spotify.svg"></div>
+          <div class="hlogo"><img src="logos/youtube.svg"></div>
+          <div class="hlogo"><img src="logos/stripe.svg"></div>
+          <div class="hlogo"><img src="logos/instagram.svg"></div>
+        </div>
+      </div>
+    </div>
+    <div class="introbot">
+      <video id="thead" poster="synctool/api_head_poster.jpg" muted playsinline preload="auto"><source src="synctool/api_head_synced.webm" type="video/webm"><source src="synctool/api_head_synced.mp4" type="video/mp4"></video>
+    </div>
+  </div>
+
+  <div id="caption" class="mid"></div>
+  <div id="capcover" style="position:absolute;inset:0;background:#000;z-index:200;display:none"></div>
+  <div id="play"><div class="tri"></div><div class="lab">Tap to play</div><div class="sub2">with sound · 88s</div></div>
+  <audio id="vo" src="synctool/api_voiceover.mp3" preload="auto"></audio>
+</div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script>
+const G=!!window.gsap;
+const scenes=[...document.querySelectorAll('.scene')];
+
+function buildChrome(){const c=document.getElementById('chrome');c.className='hf2';
+  c.innerHTML='<div class="top glasschip"><img src="favicon-512.png"><b>Rabbithole</b><span class="c">Consulting</span></div><div class="bot glasschip">rabbithole.consulting/learn/api</div>';}
+function logoTile(s,c){const d=document.createElement('div');d.className=c;d.innerHTML='<img src="logos/'+s+'.svg">';return d;}
+function iconTile(svg,c){const d=document.createElement('div');d.className=c;d.innerHTML=svg;return d;}
+
+const ICN={
+  user:'<svg viewBox="0 0 48 48" fill="none"><circle cx="24" cy="17" r="8" stroke="#14161c" stroke-width="3.2"/><path d="M9 40c2.5-8 9-12 15-12s12.5 4 15 12" stroke="#0a84ff" stroke-width="3.2" stroke-linecap="round"/></svg>',
+  server:'<svg viewBox="0 0 48 48" fill="none"><rect x="9" y="8" width="30" height="13" rx="3" stroke="#14161c" stroke-width="3.2"/><rect x="9" y="27" width="30" height="13" rx="3" stroke="#0a84ff" stroke-width="3.2"/><circle cx="15" cy="14.5" r="2.4" fill="#0a84ff"/><circle cx="15" cy="33.5" r="2.4" fill="#0a84ff"/></svg>',
+  weather:'<svg viewBox="0 0 48 48" fill="none"><circle cx="18" cy="19" r="7" stroke="#f5a623" stroke-width="3.2"/><path d="M18 6v3M18 29v3M7 19h3M28 19h-3M10 11l2 2M26 11l-2 2" stroke="#f5a623" stroke-width="3" stroke-linecap="round"/><path d="M20 36h14a6 6 0 0 0 0-12 8 8 0 0 0-15-2" fill="none" stroke="#14161c" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  flight:'<svg viewBox="0 0 48 48" fill="none"><path d="M40 26L8 30l-2-5 9-3 4-12 4 1-1 10 9-3 2-4 3 1-2 7z" fill="none" stroke="#0a84ff" stroke-width="3" stroke-linejoin="round"/><path d="M13 38h22" stroke="#14161c" stroke-width="3" stroke-linecap="round"/></svg>',
+  google:'<svg viewBox="0 0 48 48"><path fill="#4285F4" d="M43 24.5c0-1.4-.1-2.7-.4-4H24v7.6h10.7c-.5 2.5-1.9 4.6-4 6v5h6.5c3.8-3.5 6-8.7 6-14.6z"/><path fill="#34A853" d="M24 44c5.4 0 9.9-1.8 13.2-4.9l-6.5-5c-1.8 1.2-4.1 1.9-6.7 1.9-5.1 0-9.5-3.5-11-8.1h-6.7v5.1C9.6 39.6 16.3 44 24 44z"/><path fill="#FBBC05" d="M13 27.9c-.4-1.2-.6-2.5-.6-3.9s.2-2.7.6-3.9v-5.1H6.3C4.9 17.8 4 20.8 4 24s.9 6.2 2.3 9l6.7-5.1z"/><path fill="#EA4335" d="M24 12.5c2.9 0 5.5 1 7.6 2.9l5.7-5.7C33.9 6.5 29.4 4.6 24 4.6 16.3 4.6 9.6 9 6.3 15l6.7 5.1c1.5-4.6 5.9-8.1 11-7.6z"/></svg>',
+  key:'<svg viewBox="0 0 48 48" fill="none"><circle cx="16" cy="20" r="9" stroke="#0a84ff" stroke-width="3.4"/><path d="M22.5 24.5L38 40M33 35l4-4M28 30l3-3" stroke="#14161c" stroke-width="3.4" stroke-linecap="round"/></svg>',
+  lock:'<svg viewBox="0 0 48 48" fill="none"><rect x="11" y="22" width="26" height="18" rx="5" stroke="#1d9a6c" stroke-width="3.4"/><path d="M16 22v-5a8 8 0 0 1 16 0v5" stroke="#14161c" stroke-width="3.4" stroke-linecap="round"/><circle cx="24" cy="30" r="2.8" fill="#1d9a6c"/><path d="M24 32v4" stroke="#1d9a6c" stroke-width="3.2" stroke-linecap="round"/></svg>',
+  clock:'<svg viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="17" stroke="#14161c" stroke-width="3.2"/><path d="M24 14v10l7 5" stroke="#0a84ff" stroke-width="3.4" stroke-linecap="round"/></svg>'
+};
+
+// BEAT 1 - waiter: your app -> API -> the kitchen (server)
+function buildWaiter(){const c=document.getElementById('waiterViz');if(!c)return;c.innerHTML='';c.style.cssText='position:relative;width:920px;min-height:560px;display:flex;align-items:center;justify-content:center;gap:30px';
+  const app=iconTile(ICN.user,'acore');app.querySelector('svg').style.cssText='width:54%;height:54%';app.insertAdjacentHTML('beforeend','<span>your app</span>');
+  const a1=document.createElement('div');a1.className='aarrow';a1.textContent='→';
+  const hub=document.createElement('div');hub.className='ahub';hub.innerHTML='<b>API</b><span>the waiter</span>';
+  const a2=document.createElement('div');a2.className='aarrow';a2.textContent='→';
+  const srv=iconTile(ICN.server,'acore');srv.querySelector('svg').style.cssText='width:54%;height:54%';srv.insertAdjacentHTML('beforeend','<span>the kitchen</span>');
+  c.appendChild(app);c.appendChild(a1);c.appendChild(hub);c.appendChild(a2);c.appendChild(srv);}
+
+// BEAT 2 - request / response two-way
+function buildRR(){const c=document.getElementById('rrViz');if(!c)return;c.innerHTML='';c.style.cssText='position:relative;width:920px;min-height:560px;display:flex;align-items:center;justify-content:center';
+  const wrap=document.createElement('div');wrap.className='rr';
+  const node=document.createElement('div');node.className='rrnode';
+  const you=iconTile(ICN.user,'acore');you.querySelector('svg').style.cssText='width:54%;height:54%';you.insertAdjacentHTML('beforeend','<span>you</span>');
+  const flow=document.createElement('div');flow.className='rrflow';
+  flow.innerHTML='<div class="rrbar req">request <span class="ar" style="margin-left:auto">→</span></div><div class="rrbar res"><span class="ar" style="margin-right:auto">←</span> response</div>';
+  const srv=iconTile(ICN.server,'acore');srv.querySelector('svg').style.cssText='width:54%;height:54%';srv.insertAdjacentHTML('beforeend','<span>server</span>');
+  node.appendChild(you);node.appendChild(flow);node.appendChild(srv);wrap.appendChild(node);c.appendChild(wrap);}
+
+// BEAT 4 - endpoints
+function buildEndpoints(){const c=document.getElementById('epViz');if(!c)return;c.innerHTML='';c.style.cssText='position:relative;width:760px;min-height:560px;display:flex;align-items:center;justify-content:center';
+  const list=document.createElement('div');list.className='eps';
+  [['GET','/weather'],['GET','/flights'],['POST','/login']].forEach(([v,p])=>{const r=document.createElement('div');r.className='ep a';r.innerHTML='<span class="verb">'+v+'</span><span class="path">'+p+'</span>';list.appendChild(r);});
+  c.appendChild(list);}
+
+// BEAT 5 - auth key
+function buildAuth(){const c=document.getElementById('authViz');if(!c)return;c.innerHTML='';c.style.cssText='position:relative;width:920px;min-height:560px;display:flex;align-items:center;justify-content:center';
+  const a=document.createElement('div');a.className='auth';
+  const k=iconTile(ICN.key,'glass authcard a');k.insertAdjacentHTML('beforeend','<div class="al">API key</div>');
+  const arr=document.createElement('div');arr.className='aarrow';arr.textContent='→';
+  const l=iconTile(ICN.lock,'glass authcard go a');l.insertAdjacentHTML('beforeend','<div class="al">access granted</div>');
+  a.appendChild(k);a.appendChild(arr);a.appendChild(l);c.appendChild(a);}
+
+// BEAT 6 - rules: rate limits + REST
+function buildRules(){const c=document.getElementById('rulesViz');if(!c)return;c.innerHTML='';c.style.cssText='position:relative;width:920px;min-height:560px;display:flex;align-items:center;justify-content:center';
+  const r=document.createElement('div');r.className='rules';
+  const rl=document.createElement('div');rl.className='glass rule a';rl.innerHTML=ICN.clock.replace('<svg','<svg style="width:84px;height:84px"')+'<div class="rl">Rate limits</div><div class="meter"><i></i></div><div class="rd">so you can\'t ask a thousand times a second</div>';
+  const re=document.createElement('div');re.className='glass rule a';re.innerHTML='<div class="restbadge">REST</div><div class="rl" style="font-size:30px">a shared style</div><div class="rd">keeps every request clean and predictable</div>';
+  r.appendChild(rl);r.appendChild(re);c.appendChild(r);}
+
+// BEAT 7 - everyday APIs
+function buildToday(){const c=document.getElementById('todayViz');if(!c)return;c.innerHTML='';c.style.cssText='position:relative;width:920px;min-height:560px;display:flex;align-items:center;justify-content:center;gap:36px';
+  [[ICN.weather,'Weather'],[ICN.flight,'Flights'],[ICN.google,'Google login']].forEach(([svg,lbl])=>{const t=iconTile(svg,'glass authcard a');t.querySelector('svg').style.cssText='width:96px;height:96px';t.insertAdjacentHTML('beforeend','<div class="al">'+lbl+'</div>');c.appendChild(t);});}
+
+function animate(sc,settled){
+  if(sc.id==='define')buildWaiter();if(sc.id==='reqres')buildRR();if(sc.id==='endpoints')buildEndpoints();
+  if(sc.id==='auth')buildAuth();if(sc.id==='rules')buildRules();if(sc.id==='today')buildToday();
+  if(settled||!G){sc.querySelectorAll('.a').forEach(e=>{e.style.opacity=1;e.style.transform='none';e.style.filter='none';});return;}
+  const a=[...sc.querySelectorAll('.a')];gsap.set(a,{opacity:0,y:40,filter:'blur(6px)'});gsap.timeline().to(a,{opacity:1,y:0,filter:'blur(0px)',duration:.9,ease:'power3.out',stagger:.14},0);
+  if(sc.id==='define'){gsap.from(sc.querySelectorAll('#waiterViz .acore'),{scale:.5,opacity:0,duration:.7,stagger:.2,ease:'back.out(1.6)'});gsap.from(sc.querySelector('#waiterViz .ahub'),{scale:.5,opacity:0,duration:.8,delay:.4,ease:'back.out(1.5)'});}
+  if(sc.id==='reqres'){gsap.from(sc.querySelector('.rrbar.req'),{x:-60,opacity:0,duration:.7,delay:.2,ease:'power3.out'});gsap.from(sc.querySelector('.rrbar.res'),{x:60,opacity:0,duration:.7,delay:.7,ease:'power3.out'});}
+  if(sc.id==='json'){gsap.from(sc.querySelectorAll('.code'),{opacity:0,y:20,duration:.8,ease:'power3.out'});}
+  if(sc.id==='endpoints'){gsap.from(sc.querySelectorAll('.ep'),{x:-30,opacity:0,duration:.6,stagger:.14,ease:'power3.out'});}
+  if(sc.id==='auth'){gsap.from(sc.querySelector('.authcard:not(.go)'),{x:-40,opacity:0,duration:.7,ease:'power3.out'});gsap.from(sc.querySelector('.authcard.go'),{scale:.7,opacity:0,duration:.8,delay:.6,ease:'back.out(1.5)'});}
+  if(sc.id==='rules'){gsap.from(sc.querySelectorAll('.rule'),{y:34,opacity:0,duration:.7,stagger:.18,ease:'back.out(1.3)'});const m=sc.querySelector('.meter i');if(m){gsap.fromTo(m,{width:'0%'},{width:'62%',duration:1.2,delay:.5,ease:'power2.out'});}}
+  if(sc.id==='today'){gsap.from(sc.querySelectorAll('.authcard'),{y:34,opacity:0,scale:.85,duration:.7,stagger:.15,ease:'back.out(1.5)'});}
+  if(sc.id==='cta'){gsap.from(sc.querySelector('.dm'),{y:40,opacity:0,scale:.9,duration:.8,delay:.7,ease:'back.out(1.5)'});}
+}
+function show(i,settled){scenes.forEach(s=>s.classList.remove('active'));scenes[i].classList.add('active');animate(scenes[i],settled);}
+if(G){gsap.to('.b1',{x:60,y:40,duration:14,yoyo:true,repeat:-1,ease:'sine.inOut'});gsap.to('.b2',{x:-50,y:60,duration:16,yoyo:true,repeat:-1,ease:'sine.inOut'});gsap.to('.b3',{x:40,y:-50,duration:18,yoyo:true,repeat:-1,ease:'sine.inOut'});gsap.to('.b4',{x:-60,y:-30,duration:15,yoyo:true,repeat:-1,ease:'sine.inOut'});}
+buildChrome();
+
+/* ---------- captions (auto-timed across the ~88s Ivanna track) ---------- */
+const CAP_TXT=[
+ "You've used an ::API:: today.","About a hundred times.","And you didn't notice once.",
+ "Stick with me for sixty seconds.","Once you see it,","you'll spot them ::everywhere::.",
+ "An ::API:: is how two apps talk.","Think of a waiter.","You don't cook in the kitchen yourself.",
+ "You order, he brings it back.","That's an ::API::.",
+ "Same move every time.","You send a ::request::,","the server sends a ::response::.",
+ "That reply comes back as ::JSON::,","just data both sides read the same way.",
+ "You ask at spots called ::endpoints::,","and you need a ::key:: to get in.","Like a password, for software.",
+ "There are rules too.","::Rate limits:: cap how often you ask,","and ::REST:: keeps it predictable.",
+ "So here's where it clicks.","The weather. A flight. Google login.","That was ::APIs::, the whole time.",
+ "You can't unsee it now.","Comment ::APIs:: for the free guide."
+];
+const AUDIO_LEN=91.38;
+let CAPS=[];{let chars=CAP_TXT.map(t=>Math.max(8,t.replace(/::/g,'').length));let tot=chars.reduce((a,b)=>a+b,0);let acc=0;
+  CAP_TXT.forEach((t,i)=>{const start=acc/tot*AUDIO_LEN;acc+=chars[i];const end=acc/tot*AUDIO_LEN;CAPS.push({t:start,e:end,html:t.replace(/::(.*?)::/g,'<span class="hl">$1</span>')});});}
+
+const vo=document.getElementById('vo'),vid=document.getElementById('thead'),intro=document.getElementById('introsplit'),playBtn=document.getElementById('play'),cap=document.getElementById('caption');
+const SPLIT_END=10.0;
+const _Q=new URLSearchParams(location.search);const CAP=_Q.has('capture');const CAPONLY=_Q.has('caponly');const CAP_START=parseFloat(_Q.get('start')||'0');let capT0=0;function capClock(){return CAP_START+(performance.now()-capT0)/1000;}
+const SCHED=[{s:0,t:10.0},{s:1,t:22.5},{s:2,t:34.0},{s:3,t:44.5},{s:4,t:53.0},{s:5,t:62.0},{s:6,t:72.5},{s:7,t:83.0}];
+let curScene=-1,introShown=null,running=false,curCap=-1;
+function setIntro(on){if(introShown===on)return;introShown=on;intro.style.display=on?'flex':'none';cap.className=on?'mid':'low';if(on){scenes.forEach(s=>s.classList.remove('active'));curScene=-1;}}
+function updateCap(t){if(CAP&&!CAPONLY&&t<SPLIT_END){cap.style.display='none';return;}let k=-1;for(let i=0;i<CAPS.length;i++){if(t>=CAPS[i].t&&t<CAPS[i].e){k=i;break;}}
+  if(k!==curCap){curCap=k;if(k<0){cap.style.display='none';}else{cap.innerHTML=CAPS[k].html;cap.style.display='block';}}}
+function loop(){if(!running)return;const t=CAP?capClock():vo.currentTime;
+  if(t<SPLIT_END){setIntro(true);if(vid.paused&&(CAP||!vo.paused)){try{vid.play();}catch(e){}}}
+  else{setIntro(false);if(!vid.paused)vid.pause();let k=0;for(let i=0;i<SCHED.length;i++){if(t>=SCHED[i].t)k=i;}if(SCHED[k].s!==curScene){curScene=SCHED[k].s;show(curScene);}}
+  updateCap(t);requestAnimationFrame(loop);}
+function fit(){const s=Math.min(window.innerWidth/1080,window.innerHeight/1920);document.getElementById('scaler').style.transform='scale('+s+')';}
+window.addEventListener('resize',fit);fit();setTimeout(fit,200);setTimeout(fit,800);
+if(window.ResizeObserver){new ResizeObserver(fit).observe(document.body);}
+const capcover=document.getElementById('capcover');
+if(!CAP){setIntro(true);}
+else{document.documentElement.classList.add('cap');vid.style.display='none';capcover.style.display='block';
+  if(CAP_START>=SPLIT_END){setIntro(false);let k=0;for(let i=0;i<SCHED.length;i++){if(CAP_START>=SCHED[i].t)k=i;}curScene=SCHED[k].s;show(curScene,true);updateCap(CAP_START);}
+  else{setIntro(true);}}
+function start(){playBtn.style.display='none';running=true;try{vo.currentTime=0;vid.currentTime=0;}catch(e){}vid.muted=true;vo.play();vid.play().catch(()=>{});requestAnimationFrame(loop);}
+playBtn.addEventListener('click',start);
+vo.addEventListener('ended',()=>{running=false;});
+if(CAP){playBtn.style.display='none';
+  (document.fonts?document.fonts.ready:Promise.resolve()).then(()=>setTimeout(()=>{
+    capT0=performance.now();running=true;
+    capcover.style.display='none';
+    requestAnimationFrame(loop);window.__capReady=true;
+  },120));}
+if(CAPONLY){
+  document.querySelectorAll('.blob,#grain,#chrome,#introsplit,#play,#capcover').forEach(e=>e.style.display='none');
+  scenes.forEach(s=>{s.style.display='none';});
+  document.documentElement.style.background='transparent';document.body.style.background='transparent';document.getElementById('scaler').style.background='transparent';document.getElementById('stage').style.background='transparent';document.getElementById('stage').style.backgroundImage='none';
+  cap.className='mid';window.__CAPS=CAPS;window.__SPLIT_END=SPLIT_END;
+  window.__setCap=function(html){cap.innerHTML=html;cap.style.display='block';cap.className='mid';};
+  (document.fonts?document.fonts.ready:Promise.resolve()).then(()=>setTimeout(()=>{window.__capReady=true;},150));
+}
+</script>
+</body>
+</html>
