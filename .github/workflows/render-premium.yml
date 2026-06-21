@@ -1,0 +1,54 @@
+name: Render Premium -> MP4
+on:
+  workflow_dispatch:
+    inputs:
+      dir:
+        description: topic folder
+        required: true
+        default: API_Premium_01
+      seconds:
+        description: capture seconds
+        required: true
+        default: "92"
+      out:
+        description: output filename
+        required: true
+        default: API_premium_FINAL.mp4
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Install ffmpeg
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+      - name: Install Playwright Chromium
+        run: |
+          npm init -y
+          npm install playwright
+          npx playwright install --with-deps chromium
+      - name: Render premium reel
+        run: |
+          DIR="${{ github.event.inputs.dir }}"
+          SECS="${{ github.event.inputs.seconds }}"
+          OUT="${{ github.event.inputs.out }}"
+          mkdir -p "$GITHUB_WORKSPACE/_renders"
+          export NODE_PATH="$GITHUB_WORKSPACE/node_modules"
+          node "$GITHUB_WORKSPACE/$DIR/capture_premium.js" "$GITHUB_WORKSPACE/$DIR/api_premium_DRAFT.html" "$SECS" "$GITHUB_WORKSPACE/_renders" | tee /tmp/cap.log
+          WEBM="$(grep '^RAW_WEBM=' /tmp/cap.log | tail -1 | cut -d= -f2-)"
+          test -f "$WEBM"
+          VF="scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,setsar=1,fps=30,format=yuv420p"
+          ffmpeg -y -i "$WEBM" -i "$GITHUB_WORKSPACE/$DIR/synctool/api_voiceover.mp3" -vf "$VF" -c:v libx264 -crf 18 -preset medium -c:a aac -b:a 192k -af apad -shortest "$GITHUB_WORKSPACE/_renders/$OUT"
+      - name: Publish MP4 release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          OUT="${{ github.event.inputs.out }}"
+          TAG="premium-${{ github.run_id }}"
+          gh release create "$TAG" "$GITHUB_WORKSPACE/_renders/$OUT" --title "$OUT" --notes "Premium render" --repo "$GITHUB_REPOSITORY"
+          echo "URL=https://github.com/$GITHUB_REPOSITORY/releases/download/$TAG/$OUT"
