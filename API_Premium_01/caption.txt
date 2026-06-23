@@ -1,0 +1,10 @@
+Comment "APIs" 👇 and we'll DM you our free beginner guide, you'll understand APIs better than most people who use them every day.
+
+You've used an API about 100 times today and never noticed once. Here's what they actually are, in 60 seconds.
+
+An API is just how two apps talk to each other. Picture a waiter: you don't cook your own food, you tell the waiter what you want and he brings back exactly what you asked for. You send a request, the server sends back a response (usually as JSON, which is just data lined up so both sides read it the same way). Checking the weather, booking a flight, logging in with Google, all APIs, quietly, the whole time.
+
+Day 2 of 30 free, working AI kits for small business.
+Rabbithole Consulting
+
+#API #APIs #JSON #REST #webdev #coding #techexplained #learntocode #programming #softwaredevelopment #smallbusinessAI #automation #AIforbusiness #buildwithAI #beginnercoding
