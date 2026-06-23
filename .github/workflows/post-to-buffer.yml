@@ -1,0 +1,50 @@
+name: Post to Buffer
+
+# On-demand publish of an already-rendered reel to Buffer (Instagram Reel + TikTok)
+# via the Buffer GraphQL API (_REEL_ENGINE/post_to_buffer.mjs), using the BUFFER_TOKEN
+# secret. The MP4 must be at a PUBLIC url (e.g. a GitHub Release asset on this public repo).
+# Caption is read from a committed .txt file (CTA-first), so multi-line/emoji survive.
+
+on:
+  workflow_dispatch:
+    inputs:
+      video_url:
+        description: "Public MP4 URL (GitHub Release asset)"
+        required: true
+      caption_file:
+        description: "Caption .txt path (CTA-first)"
+        required: false
+        default: "API_Premium_01/caption.txt"
+      services:
+        description: "Buffer channels (comma list)"
+        required: false
+        default: "instagram,tiktok"
+      due_at:
+        description: "Schedule time ISO 8601 UTC (blank = add to queue)"
+        required: false
+        default: ""
+      thumb_url:
+        description: "Optional thumbnail/cover URL"
+        required: false
+        default: ""
+
+jobs:
+  post:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Post to Buffer
+        env:
+          BUFFER_TOKEN: ${{ secrets.BUFFER_TOKEN }}
+        run: |
+          if [ -z "$BUFFER_TOKEN" ]; then echo "::error::BUFFER_TOKEN secret is not set."; exit 1; fi
+          ARGS=( --video-url "${{ github.event.inputs.video_url }}" --services "${{ github.event.inputs.services }}" )
+          CAP="${{ github.event.inputs.caption_file }}"
+          if [ -n "$CAP" ] && [ -f "$GITHUB_WORKSPACE/$CAP" ]; then ARGS+=( --caption-file "$GITHUB_WORKSPACE/$CAP" ); fi
+          if [ -n "${{ github.event.inputs.due_at }}" ]; then ARGS+=( --due-at "${{ github.event.inputs.due_at }}" ); fi
+          if [ -n "${{ github.event.inputs.thumb_url }}" ]; then ARGS+=( --thumb-url "${{ github.event.inputs.thumb_url }}" ); fi
+          node "$GITHUB_WORKSPACE/_REEL_ENGINE/post_to_buffer.mjs" "${ARGS[@]}"
